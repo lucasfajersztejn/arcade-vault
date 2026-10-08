@@ -68,10 +68,10 @@ async function GameDetail({ params }: { params: PageProps<"/games/[id]">["params
             </div>
           </div>
           <div className="detail-actions">
-            <Link href={`/juegos/${game.id}/jugar`} className="btn xl pulse">
+            <Link href={`/games/${game.id}/jugar`} className="btn xl pulse">
               ▶&nbsp;&nbsp;JUGAR AHORA
             </Link>
-            <Link href="/" className="btn ghost lg">
+            <Link href="/games" className="btn ghost lg">
               VOLVER AL VAULT
             </Link>
           </div>

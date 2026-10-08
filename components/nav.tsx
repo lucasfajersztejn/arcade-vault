@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/session";
 
 const LINKS = [
-  { href: "/", label: "Biblioteca", match: (p: string) => p === "/" || p.startsWith("/juegos") },
+  { href: "/games", label: "Biblioteca", match: (p: string) => p.startsWith("/games") },
   { href: "/salon", label: "Salón de la Fama", match: (p: string) => p.startsWith("/salon") },
 ] as const;
 
@@ -33,7 +33,7 @@ export function Nav() {
   return (
     <>
       <nav className="av-nav" aria-label="Principal">
-        <Link href="/" className="logo" aria-label="Arcade Vault, ir a la biblioteca">
+        <Link href="/" className="logo" aria-label="Arcade Vault, ir al inicio">
           <div className="logo-mark" aria-hidden="true"></div>
           <div className="logo-text neon-cyan">
             ARCADE <span className="neon-magenta">VAULT</span>

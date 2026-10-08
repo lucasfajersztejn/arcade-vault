@@ -28,7 +28,7 @@ export function GameCard({ game }: { game: Game }) {
   return (
     <Link
       ref={ref}
-      href={`/juegos/${game.id}`}
+      href={`/games/${game.id}`}
       className="card"
       onMouseMove={onMove}
       onMouseLeave={onLeave}
