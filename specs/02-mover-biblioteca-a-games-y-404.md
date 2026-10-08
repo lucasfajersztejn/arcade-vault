@@ -17,7 +17,7 @@
 - Nueva **home provisional** en `/`: pantalla simple con el estilo retro-neón existente (título/logo, una frase y botón "ENTRAR AL VAULT" → `/games`). Sin datos nuevos.
 - Nueva **página 404 global** (`app/not-found.tsx`) con estilo arcade ("GAME OVER / 404", ilustración SVG o ASCII-art, efecto neón/glitch respetando `prefers-reduced-motion`, botones a `/` y `/games`). Sustituye al 404 por defecto en toda la app, incluido el caso `/games/no-existe` (el `notFound()` ya existente).
 - Verificación visual con Playwright (ver criterios): capturas en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/`.
-- Diseño: **usar obligatoriamente `/frontend-design` y `/ui-ux-pro-max`** (CLAUDE.md) para la home provisional y la página 404.
+- Diseño: **usar SIEMPRE y obligatoriamente `/frontend-design` y `/ui-ux-pro-max`** (CLAUDE.md) en cualquier trabajo visual o de UX de esta spec: home provisional, página 404 y cualquier ajuste de estilos, componentes o navegación. No se escribe ni se modifica UI sin haberlos invocado antes.
 
 ### Fuera (explícito)
 - **La home definitiva** (incluida la plantilla sin trackear `refereences/templates/home-about/`): spec propia posterior. La home de esta spec es provisional.
@@ -63,7 +63,7 @@ Mapeo de rutas resultante: home → `/`, biblioteca → `/games`, detalle → `/
 Cada paso deja la app compilando (`npm run build`) y navegable.
 
 1. **Leer la documentación de Next 16.4** en `node_modules/next/dist/docs/` sobre `not-found.tsx`, `notFound()` y estructura de rutas (regla de CLAUDE.md).
-2. **Invocar `/frontend-design` y `/ui-ux-pro-max`** antes de escribir la home provisional y el 404; mantener la identidad retro-neón.
+2. **Invocar `/frontend-design` y `/ui-ux-pro-max`** antes de escribir la home provisional y el 404, y **volver a aplicarlos siempre** que un paso posterior toque UI (pasos 4, 5, 6 y 8: Nav, home, 404, ajustes de estilos); mantener la identidad retro-neón.
 3. **Mover rutas:** `git mv` de `app/juegos/[id]` → `app/games/[id]`; crear `app/games/page.tsx` con el contenido actual de `app/page.tsx`.
 4. **Actualizar enlaces** en `nav`, `game-card`, `game-player`, `hall-of-fame` y `auth-form` (tabla de arriba). Comprobar con `grep` que no queda ningún `"/juegos` ni `href="/"` que debería ser `/games`.
 5. **Home provisional** en `app/page.tsx`: pantalla simple con CTA "ENTRAR AL VAULT" → `/games`. Link activo del Nav: sin pestaña activa en `/`.
@@ -87,7 +87,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 - [ ] `/games/no-existe` y una ruta inexistente cualquiera (p. ej. `/xyz`) muestran la nueva página 404 arcade con botones a `/` y `/games` operables con teclado (foco visible).
 - [ ] La animación del 404 se desactiva con `prefers-reduced-motion: reduce`.
 - [ ] La home y el 404 no tienen scroll horizontal a ancho ≤ 768 px y se ven correctamente en escritorio y móvil.
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la home provisional y el 404.
+- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la home provisional, el 404 y cualquier otro cambio de UI de esta spec, y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
 - [ ] Las capturas de Playwright están en `.playwright-screenshots/` y los artefactos del MCP en `.playwright-mcp/`; no hay capturas sueltas en otras carpetas y `git status` no las muestra (ignoradas).
 - [ ] La sesión (`av_user`) y las puntuaciones (`av_scores`) siguen funcionando tras el cambio de rutas.
 
