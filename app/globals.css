@@ -547,7 +547,7 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 .detail-info { display: flex; flex-direction: column; gap: 16px; }
-.detail-info h2 {
+.detail-info h1 {
   margin: 0;
   font-family: var(--pixel);
   font-size: clamp(20px, 3vw, 32px);
