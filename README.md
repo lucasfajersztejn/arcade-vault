@@ -14,3 +14,10 @@ https://github.com/Klerith/fernando-skills
 ```bash
 npx skills@latest add Klerith/fernando-skills
 ```
+
+## Commands
+
+- `npm run dev` — dev server (http://localhost:3000)
+- `npm run build` / `npm run start` — production build / serve
+- `npm run lint` — ESLint 9 (flat config in `eslint.config.mjs`)
+- No test runner configured.
