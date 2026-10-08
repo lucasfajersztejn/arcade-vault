@@ -7,7 +7,7 @@ export function generateStaticParams() {
   return GAMES.map((g) => ({ id: g.id }));
 }
 
-export default function PlayPage({ params }: PageProps<"/juegos/[id]/jugar">) {
+export default function PlayPage({ params }: PageProps<"/games/[id]/jugar">) {
   return (
     <Suspense
       fallback={
@@ -21,7 +21,7 @@ export default function PlayPage({ params }: PageProps<"/juegos/[id]/jugar">) {
   );
 }
 
-async function Player({ params }: { params: PageProps<"/juegos/[id]/jugar">["params"] }) {
+async function Player({ params }: { params: PageProps<"/games/[id]/jugar">["params"] }) {
   const { id } = await params;
   const game = getGame(id);
   if (!game) notFound();

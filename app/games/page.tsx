@@ -1,5 +1,5 @@
 import { Library } from "@/components/library";
 
-export default function Home() {
+export default function GamesPage() {
   return <Library />;
 }
