@@ -8,12 +8,10 @@ Arcade Vault: online platform to play games and compete for the highest score. B
 
 Currently a fresh `create-next-app` scaffold: only `app/layout.tsx`, `app/page.tsx`, `app/globals.css`. No tests, no game code yet.
 
-## Commands
+## Skills y Comandos
+- Usa siempre /frontend-design para diseñar la interfaz de usuario y componentes visuales.
+- Usa siempre /ui-ux-pro-max para diseñar la experiencia de usuario, flujos de navegación y microinteracciones.
 
-- `npm run dev` — dev server (http://localhost:3000)
-- `npm run build` / `npm run start` — production build / serve
-- `npm run lint` — ESLint 9 (flat config in `eslint.config.mjs`)
-- No test runner configured.
 
 ## Stack and gotchas
 
@@ -21,3 +19,4 @@ Currently a fresh `create-next-app` scaffold: only `app/layout.tsx`, `app/page.t
 - This Next.js version has breaking changes from older versions. Before writing Next.js code, read the relevant guide in `node_modules/next/dist/docs/` (`01-app`, `02-pages`, `03-architecture`, `04-community`). Heed deprecation notices. (From `AGENTS.md`, which `next dev` re-adds if removed.)
 - Path alias: `@/*` maps to repo root (e.g. `@/app/...`).
 - Dark mode via `prefers-color-scheme` CSS variables `--background` / `--foreground`.
+
