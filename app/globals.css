@@ -969,3 +969,28 @@ a { color: inherit; text-decoration: none; }
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
 @keyframes spinpix { to { transform: rotate(360deg); } }
+
+/* ===== footer ===== */
+.av-footer {
+  border-top: 1px solid var(--line);
+  padding: 20px 32px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+/* ===== accesibilidad ===== */
+:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
