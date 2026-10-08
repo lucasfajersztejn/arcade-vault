@@ -140,6 +140,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 - **Datos mock en código + `localStorage` para puntuaciones guardadas.** Permite ver reflejadas en el Salón las partidas del usuario sin backend. *Descartado:* solo mock estático (el guardado no tendría efecto visible).
 - **Server components por defecto**; `"use client"` solo donde hay estado, refs o `localStorage` (Nav, Library, GameCard, GamePlayer, AuthForm, HallOfFame, SessionProvider).
 - **Estilos:** se reutiliza `app/globals.css` ya portado de `styles.css`, con las clases `av-*` de la plantilla; no se migra a utilidades Tailwind en este MVP.
+- **404 de ids inexistentes:** con Cache Components activo, `/juegos/no-existe` muestra la pantalla 404 (con `noindex`) pero responde HTTP 200, porque `notFound()` se ejecuta con el streaming iniciado y `dynamicParams` no es compatible. Se acepta para el MVP visual; el criterio "devuelve 404" se interpreta como "se muestra el 404". *Descartado:* `proxy.ts` y desactivar Cache Components.
 - **Estructura de carpetas** (`lib/`, `components/` en la raíz, alias `@/*`) propuesta por esta spec; ajustable en la revisión.
 
 ---
