@@ -75,21 +75,21 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 
 ## Criterios de aceptación
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `/` muestra la home provisional con un botón que lleva a `/games`; ya no muestra la Biblioteca.
-- [ ] `/games` muestra hero, buscador, 5 chips y las 8 tarjetas (comportamiento idéntico al de la antigua `/`).
-- [ ] Pulsar una tarjeta o su botón JUGAR navega a `/games/<id>`; "JUGAR AHORA" lleva a `/games/<id>/jugar`.
-- [ ] "VOLVER AL VAULT" (detalle, reproductor y salón) lleva a `/games`; "SALIR" del reproductor lleva a `/games/<id>`.
-- [ ] Tras iniciar sesión o "JUGAR COMO INVITADO" en `/login` se redirige a `/games`.
-- [ ] El link "Biblioteca" del Nav apunta a `/games` y está activo en `/games` y `/games/*`; "Salón de la Fama" activo en `/salon`; "Iniciar Sesión" activo en `/login`; ninguno activo en `/`. El logo lleva a `/`.
-- [ ] `grep -r "/juegos" app components lib` no devuelve resultados.
-- [ ] `/juegos/caida` y `/juegos/caida/jugar` muestran el 404 (sin redirects).
-- [ ] `/games/no-existe` y una ruta inexistente cualquiera (p. ej. `/xyz`) muestran la nueva página 404 arcade con botones a `/` y `/games` operables con teclado (foco visible).
-- [ ] La animación del 404 se desactiva con `prefers-reduced-motion: reduce`.
-- [ ] La home y el 404 no tienen scroll horizontal a ancho ≤ 768 px y se ven correctamente en escritorio y móvil.
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la home provisional, el 404 y cualquier otro cambio de UI de esta spec, y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
-- [ ] Las capturas de Playwright están en `.playwright-screenshots/` y los artefactos del MCP en `.playwright-mcp/`; no hay capturas sueltas en otras carpetas y `git status` no las muestra (ignoradas).
-- [ ] La sesión (`av_user`) y las puntuaciones (`av_scores`) siguen funcionando tras el cambio de rutas.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `/` muestra la home provisional con un botón que lleva a `/games`; ya no muestra la Biblioteca.
+- [x] `/games` muestra hero, buscador, 5 chips y las 8 tarjetas (comportamiento idéntico al de la antigua `/`).
+- [x] Pulsar una tarjeta o su botón JUGAR navega a `/games/<id>`; "JUGAR AHORA" lleva a `/games/<id>/jugar`.
+- [x] "VOLVER AL VAULT" (detalle, reproductor y salón) lleva a `/games`; "SALIR" del reproductor lleva a `/games/<id>`.
+- [x] Tras iniciar sesión o "JUGAR COMO INVITADO" en `/login` se redirige a `/games`.
+- [ ] El link "Biblioteca" del Nav apunta a `/games` y está activo en `/games` y `/games/*`; "Salón de la Fama" activo en `/salon`; "Iniciar Sesión" activo en `/login`; ninguno activo en `/`. El logo lleva a `/`. *(Pendiente: "Iniciar Sesión" no tiene estado activo en el Nav de escritorio, solo en el panel móvil; el comportamiento viene de la spec 01 y se deja para una spec posterior. El resto del criterio se verificó.)*
+- [x] `grep -r "/juegos" app components lib` no devuelve resultados.
+- [x] `/juegos/caida` y `/juegos/caida/jugar` muestran el 404 (sin redirects).
+- [x] `/games/no-existe` y una ruta inexistente cualquiera (p. ej. `/xyz`) muestran la nueva página 404 arcade con botones a `/` y `/games` operables con teclado (foco visible).
+- [x] La animación del 404 se desactiva con `prefers-reduced-motion: reduce`.
+- [x] La home y el 404 no tienen scroll horizontal a ancho ≤ 768 px y se ven correctamente en escritorio y móvil.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la home provisional, el 404 y cualquier otro cambio de UI de esta spec, y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
+- [x] Las capturas de Playwright están en `.playwright-screenshots/` y los artefactos del MCP en `.playwright-mcp/`; no hay capturas sueltas en otras carpetas y `git status` no las muestra (ignoradas).
+- [x] La sesión (`av_user`) y las puntuaciones (`av_scores`) siguen funcionando tras el cambio de rutas.
 
 ---
 
