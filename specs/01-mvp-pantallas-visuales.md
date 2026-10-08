@@ -110,25 +110,25 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 
 ## Criterios de aceptación
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `/` muestra hero, buscador, 5 chips (TODOS + 4 categorías) y las 8 tarjetas de juego.
-- [ ] Buscar "xyz" en la Biblioteca muestra "NO HAY RESULTADOS"; borrar el texto restaura las 8 tarjetas.
-- [ ] El chip PUZZLE muestra solo CAÍDA; el chip TODOS vuelve a mostrar las 8.
-- [ ] Pulsar una tarjeta o su botón JUGAR navega a `/juegos/<id>`.
-- [ ] `/juegos/caida` muestra título, descripción, stats, 10 filas de ranking con #01–#03 destacados; `/juegos/no-existe` devuelve 404.
-- [ ] "JUGAR AHORA" lleva a `/juegos/<id>/jugar`; "VOLVER AL VAULT" lleva a `/`.
-- [ ] En el reproductor la puntuación aumenta sola; PAUSA la detiene y muestra "EN PAUSA"; REANUDAR la retoma.
-- [ ] FIN abre el modal con la puntuación final; GUARDAR PUNTUACIÓN muestra "PUNTUACIÓN GUARDADA_" y añade una entrada a `localStorage["av_scores"]`.
-- [ ] JUGAR DE NUEVO reinicia puntuación, vidas y nivel; SALIR lleva al detalle del juego.
-- [ ] `/login`: las pestañas alternan entre INICIAR SESIÓN y CREAR CUENTA (esta añade el campo de correo); enviar el formulario guarda `av_user`, redirige a `/` y el Nav muestra el nombre en lugar de "Iniciar Sesión".
-- [ ] "JUGAR COMO INVITADO" redirige a `/` sin sesión; cerrar sesión elimina `av_user`.
-- [ ] Recargar la página con sesión iniciada mantiene el nombre en el Nav sin errores de hidratación en consola.
-- [ ] `/salon` muestra podio (02 · 01 · 03), tabla de 12 filas y tabs por cada uno de los 8 juegos; cambiar de tab cambia los datos.
-- [ ] Con sesión iniciada aparece "TU MEJOR MARCA EN <JUEGO>"; sin sesión no aparece.
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` durante la implementación y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado en el PR).
-- [ ] Los elementos interactivos son operables con teclado (foco visible) y las animaciones respetan `prefers-reduced-motion`.
-- [ ] A ancho ≤ 768 px aparece el botón hamburguesa y el panel móvil abre/cierra con su backdrop; no hay scroll horizontal.
-- [ ] El link activo del Nav es el correcto en `/`, `/juegos/*`, `/salon` y `/login`.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `/` muestra hero, buscador, 5 chips (TODOS + 4 categorías) y las 8 tarjetas de juego.
+- [x] Buscar "xyz" en la Biblioteca muestra "NO HAY RESULTADOS"; borrar el texto restaura las 8 tarjetas.
+- [x] El chip PUZZLE muestra solo CAÍDA; el chip TODOS vuelve a mostrar las 8.
+- [x] Pulsar una tarjeta o su botón JUGAR navega a `/juegos/<id>`.
+- [x] `/juegos/caida` muestra título, descripción, stats, 10 filas de ranking con #01–#03 destacados; `/juegos/no-existe` devuelve 404.
+- [x] "JUGAR AHORA" lleva a `/juegos/<id>/jugar`; "VOLVER AL VAULT" lleva a `/`.
+- [x] En el reproductor la puntuación aumenta sola; PAUSA la detiene y muestra "EN PAUSA"; REANUDAR la retoma.
+- [x] FIN abre el modal con la puntuación final; GUARDAR PUNTUACIÓN muestra "PUNTUACIÓN GUARDADA_" y añade una entrada a `localStorage["av_scores"]`.
+- [x] JUGAR DE NUEVO reinicia puntuación, vidas y nivel; SALIR lleva al detalle del juego.
+- [x] `/login`: las pestañas alternan entre INICIAR SESIÓN y CREAR CUENTA (esta añade el campo de correo); enviar el formulario guarda `av_user`, redirige a `/` y el Nav muestra el nombre en lugar de "Iniciar Sesión".
+- [x] "JUGAR COMO INVITADO" redirige a `/` sin sesión; cerrar sesión elimina `av_user`.
+- [x] Recargar la página con sesión iniciada mantiene el nombre en el Nav sin errores de hidratación en consola.
+- [x] `/salon` muestra podio (02 · 01 · 03), tabla de 12 filas y tabs por cada uno de los 8 juegos; cambiar de tab cambia los datos.
+- [x] Con sesión iniciada aparece "TU MEJOR MARCA EN <JUEGO>"; sin sesión no aparece.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` durante la implementación y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado en el PR).
+- [x] Los elementos interactivos son operables con teclado (foco visible) y las animaciones respetan `prefers-reduced-motion`.
+- [x] A ancho ≤ 768 px aparece el botón hamburguesa y el panel móvil abre/cierra con su backdrop; no hay scroll horizontal.
+- [x] El link activo del Nav es el correcto en `/`, `/juegos/*`, `/salon` y `/login`.
 
 ---
 
