@@ -19,7 +19,7 @@
 - **Validación** compartida cliente/servidor sin dependencias: campos obligatorios con `trim`, email con regex simple, límites (nombre ≤ 60, email ≤ 254, mensaje 10–2000 caracteres).
 - **Estados UX** extra sobre la plantilla: carga (botón deshabilitado con "TRANSMITIENDO…"), error de validación por campo + `shake`, y error de envío estilo terminal (`[ERR] …` en rojo) conservando lo escrito para reintentar.
 - **Honeypot** anti-spam: campo oculto `website`; si llega relleno se devuelve éxito sin enviar.
-- Variables de entorno en `.env.local` (ignorado) y `.env.template` commiteado con las claves vacías.
+- Variables de entorno en `.env` (ignorado) y `.env.template` commiteado con las claves vacías.
 - Diseño: **usar SIEMPRE y obligatoriamente `/frontend-design` y `/ui-ux-pro-max`** (CLAUDE.md) antes de escribir o modificar cualquier UI de esta spec (página, formulario, estados, Nav).
 
 ### Fuera (explícito)
@@ -110,13 +110,13 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 - [ ] Enviar con algún campo vacío no llama al servidor, muestra el error junto al campo y aplica el `shake`.
 - [ ] Un email inválido (`abc`) o un mensaje de menos de 10 caracteres muestra error de campo; la Server Action rechaza lo mismo si se salta la validación del cliente.
 - [ ] Durante el envío el botón está deshabilitado y muestra "TRANSMITIENDO…".
-- [ ] Con `.env.local` válido, un envío correcto muestra la terminal con "MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, <NOMBRE>." y el correo llega a `CONTACT_TO_EMAIL` con asunto `[Arcade Vault] Nuevo mensaje de <nombre>` y `Reply-To` = correo del usuario.
+- [ ] Con `.env` válido, un envío correcto muestra la terminal con "MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, <NOMBRE>." y el correo llega a `CONTACT_TO_EMAIL` con asunto `[Arcade Vault] Nuevo mensaje de <nombre>` y `Reply-To` = correo del usuario.
 - [ ] Sin `RESEND_API_KEY`, el envío muestra la línea `[ERR]`, conserva lo escrito y la página no se rompe.
 - [ ] Con el campo `website` relleno, se muestra éxito y no se envía ningún correo.
 - [ ] "ENVIAR OTRO MENSAJE" vuelve al formulario vacío.
 - [ ] Un mensaje con `<script>` llega escapado en el HTML del correo.
 - [ ] `RESEND_API_KEY` no aparece en el bundle del cliente (`grep -r RESEND_API_KEY .next/static` sin resultados).
-- [ ] `.env.template` está commiteado; `.env.local` no aparece en `git status`.
+- [ ] `.env.template` está commiteado; `.env` no aparece en `git status`.
 - [ ] Los `.reveal` aparecen al hacer scroll y sin animación con `prefers-reduced-motion: reduce`.
 - [ ] Sin scroll horizontal a ≤ 768 px; el grid de contacto pasa a una columna a ≤ 900 px.
 - [ ] Campos y botones operables con teclado (foco visible) y con `label` asociado.
