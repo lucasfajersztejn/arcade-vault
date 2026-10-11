@@ -19,7 +19,7 @@
 - **Validación** compartida cliente/servidor sin dependencias: campos obligatorios con `trim`, email con regex simple, límites (nombre ≤ 60, email ≤ 254, mensaje 10–2000 caracteres).
 - **Estados UX** extra sobre la plantilla: carga (botón deshabilitado con "TRANSMITIENDO…"), error de validación por campo + `shake`, y error de envío estilo terminal (`[ERR] …` en rojo) conservando lo escrito para reintentar.
 - **Honeypot** anti-spam: campo oculto `website`; si llega relleno se devuelve éxito sin enviar.
-- Variables de entorno en `.env.local` (ignorado) y `.env.example` commiteado con las claves vacías.
+- Variables de entorno en `.env.local` (ignorado) y `.env.template` commiteado con las claves vacías.
 - Diseño: **usar SIEMPRE y obligatoriamente `/frontend-design` y `/ui-ux-pro-max`** (CLAUDE.md) antes de escribir o modificar cualquier UI de esta spec (página, formulario, estados, Nav).
 
 ### Fuera (explícito)
@@ -81,8 +81,8 @@ Sin persistencia: no se guarda nada entre sesiones.
 | `components/contact-form.tsx` | crear: client, `useActionState`, estados idle / carga / invalid / error / sent, terminal de éxito, "ENVIAR OTRO MENSAJE" (remonta el form con `key`) |
 | `components/nav.tsx` | modificar: añadir `{ href: "/about", label: "Acerca de", match: p => p.startsWith("/about") }` a `LINKS` |
 | `app/globals.css` | portar desde `refereences/templates/home-about/styles.css` (≈ líneas 1072–1200) las clases `.about*`, `.highlight*`, `.hl-*`, `.about-divider`/`.div-*`, `.contact-*`, `.tip*`, `.terminal-success`/`.term-*`, `.reveal`, `@keyframes shake`; más las nuevas de error (`.field-error`, `.term-error`) |
-| `.env.example` | crear: las 3 claves |
-| `.gitignore` | añadir `!.env.example` |
+| `.env.template` | crear: las 3 claves |
+| `.gitignore` | añadir `!.env.template` |
 
 ---
 
@@ -92,7 +92,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 
 1. **Leer la documentación de Next 16.4** en `node_modules/next/dist/docs/` sobre Server Actions / Server Functions, `useActionState`, formularios y variables de entorno (regla de CLAUDE.md), teniendo en cuenta `cacheComponents: true` de `next.config.ts`.
 2. **Invocar `/frontend-design` y `/ui-ux-pro-max`** antes de tocar UI, y volver a aplicarlos en los pasos 4, 5, 6 y 7. Mantener la plantilla exacta; solo se añaden los estados de carga y error.
-3. **Dependencia y config:** `npm install resend`; crear `.env.example`; añadir `!.env.example` a `.gitignore`.
+3. **Dependencia y config:** `npm install resend`; crear `.env.template`; añadir `!.env.template` a `.gitignore`.
 4. **Página estática `/about`:** portar CSS a `globals.css`, crear `HighlightIcon`, `RevealObserver` y `app/about/page.tsx` con hero, highlights, divisor e intro de contacto. El formulario aún sin acción (solo visual).
 5. **Nav:** añadir "Acerca de" a `LINKS`; comprobar activo en `/about` y ninguno de más en otras rutas.
 6. **Validación y Server Action:** `lib/contact.ts` y `app/about/actions.ts`. Si falta `RESEND_API_KEY` o `CONTACT_TO_EMAIL`, devolver `{ status: "error" }` (y `console.error` en servidor), sin lanzar excepción.
@@ -116,7 +116,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 - [ ] "ENVIAR OTRO MENSAJE" vuelve al formulario vacío.
 - [ ] Un mensaje con `<script>` llega escapado en el HTML del correo.
 - [ ] `RESEND_API_KEY` no aparece en el bundle del cliente (`grep -r RESEND_API_KEY .next/static` sin resultados).
-- [ ] `.env.example` está commiteado; `.env.local` no aparece en `git status`.
+- [ ] `.env.template` está commiteado; `.env.local` no aparece en `git status`.
 - [ ] Los `.reveal` aparecen al hacer scroll y sin animación con `prefers-reduced-motion: reduce`.
 - [ ] Sin scroll horizontal a ≤ 768 px; el grid de contacto pasa a una columna a ≤ 900 px.
 - [ ] Campos y botones operables con teclado (foco visible) y con `label` asociado.
@@ -136,7 +136,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 - **Honeypot como único anti-spam.** *Descartado:* rate limit en memoria (no fiable en serverless) y CAPTCHA.
 - **Correo en texto plano + HTML escapado.** *Descartado:* React Email.
 - **Estados de carga y error añadidos** a la plantilla, en estilo terminal, para no ocultar fallos reales de envío.
-- **`.env.example` commiteado** con `!.env.example` en `.gitignore`. *Descartado:* documentarlo solo en el README.
+- **`.env.template` commiteado** con `!.env.template` en `.gitignore`. *Descartado:* documentarlo solo en el README.
 - **Verificación con envío real** usando la API key del usuario, más el caso sin key.
 
 ---
@@ -145,7 +145,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 
 | Riesgo | Mitigación |
 |---|---|
-| Resend en modo onboarding rechaza destinatarios distintos al email de la cuenta | `CONTACT_TO_EMAIL` debe ser el email de la cuenta Resend; documentado en `.env.example`. |
+| Resend en modo onboarding rechaza destinatarios distintos al email de la cuenta | `CONTACT_TO_EMAIL` debe ser el email de la cuenta Resend; documentado en `.env.template`. |
 | Falta de env vars en producción/local | La acción devuelve `{ status: "error" }` con `[ERR]` en vez de lanzar; `console.error` en servidor. |
 | Fuga de la API key al cliente | Solo se lee en `app/about/actions.ts` (`"use server"`); criterio con `grep` sobre `.next/static`. |
 | Inyección HTML en el correo | Escapar `& < > " '` en el cuerpo HTML; el texto plano va tal cual. |
