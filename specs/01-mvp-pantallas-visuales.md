@@ -88,6 +88,8 @@ Persistencia: solo `localStorage`, claves `av_user` y `av_scores`, sin versionad
 
 Mapeo de rutas: `biblioteca` → `/`, `detalle` → `/juegos/[id]`, `player` → `/juegos/[id]/jugar`, `auth` → `/login`, `salon` → `/salon`. La navegación usa `next/link` / `useRouter`, no hash.
 
+> **Nota (SPEC 02):** este mapeo quedó obsoleto. La Biblioteca vive ahora en `/games`, el Detalle en `/games/[id]` y el Reproductor en `/games/[id]/jugar`; `/` es una home provisional y existe un 404 global. Ver `specs/02-mover-biblioteca-a-games-y-404.md`.
+
 ---
 
 ## Plan de implementación
