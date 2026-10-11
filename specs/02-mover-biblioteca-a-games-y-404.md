@@ -1,6 +1,6 @@
 # SPEC 02 — Mover la biblioteca a /games, home provisional y página 404
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 01 (existe en `specs/01-mvp-pantallas-visuales.md`, estado Implementado)
 **Fecha:** 2026-10-08
 **Objetivo:** Mover la Biblioteca y las rutas de juegos de `/` y `/juegos/*` a `/games` y `/games/*`, dejar en `/` una home provisional con un enlace a `/games`, y añadir una página 404 global con estilo arcade.
