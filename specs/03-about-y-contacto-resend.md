@@ -1,6 +1,6 @@
 # SPEC 03 — Página Acerca de y formulario de contacto con Resend
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 01 (`specs/01-mvp-pantallas-visuales.md`, Implementado) y SPEC 02 (`specs/02-mover-biblioteca-a-games-y-404.md`, Implementado)
 **Fecha:** 2026-10-11
 **Objetivo:** Portar la pantalla "Acerca de" de `refereences/templates/home-about/about.jsx` a la ruta `/about`, idéntica a la plantilla, con un formulario de contacto que envía un correo real al equipo mediante Resend desde una Server Action.
@@ -104,24 +104,24 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 
 ## Criterios de aceptación
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `/about` muestra hero, misión, los 3 highlights con sus iconos, el divisor de 24 píxeles, la intro de contacto con 3 tips y el formulario, con los mismos textos y estilos que `about.jsx`.
-- [ ] El Nav (escritorio y móvil) tiene "Acerca de" → `/about`, activo solo en `/about`.
-- [ ] Enviar con algún campo vacío no llama al servidor, muestra el error junto al campo y aplica el `shake`.
-- [ ] Un email inválido (`abc`) o un mensaje de menos de 10 caracteres muestra error de campo; la Server Action rechaza lo mismo si se salta la validación del cliente.
-- [ ] Durante el envío el botón está deshabilitado y muestra "TRANSMITIENDO…".
-- [ ] Con `.env` válido, un envío correcto muestra la terminal con "MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, <NOMBRE>." y el correo llega a `CONTACT_TO_EMAIL` con asunto `[Arcade Vault] Nuevo mensaje de <nombre>` y `Reply-To` = correo del usuario.
-- [ ] Sin `RESEND_API_KEY`, el envío muestra la línea `[ERR]`, conserva lo escrito y la página no se rompe.
-- [ ] Con el campo `website` relleno, se muestra éxito y no se envía ningún correo.
-- [ ] "ENVIAR OTRO MENSAJE" vuelve al formulario vacío.
-- [ ] Un mensaje con `<script>` llega escapado en el HTML del correo.
-- [ ] `RESEND_API_KEY` no aparece en el bundle del cliente (`grep -r RESEND_API_KEY .next/static` sin resultados).
-- [ ] `.env.template` está commiteado; `.env` no aparece en `git status`.
-- [ ] Los `.reveal` aparecen al hacer scroll y sin animación con `prefers-reduced-motion: reduce`.
-- [ ] Sin scroll horizontal a ≤ 768 px; el grid de contacto pasa a una columna a ≤ 900 px.
-- [ ] Campos y botones operables con teclado (foco visible) y con `label` asociado.
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
-- [ ] Capturas de Playwright en `.playwright-screenshots/` y artefactos en `.playwright-mcp/`, ignorados por git.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `/about` muestra hero, misión, los 3 highlights con sus iconos, el divisor de 24 píxeles, la intro de contacto con 3 tips y el formulario, con los mismos textos y estilos que `about.jsx`.
+- [x] El Nav (escritorio y móvil) tiene "Acerca de" → `/about`, activo solo en `/about`.
+- [x] Enviar con algún campo vacío no llama al servidor, muestra el error junto al campo y aplica el `shake`.
+- [x] Un email inválido (`abc`) o un mensaje de menos de 10 caracteres muestra error de campo; la Server Action rechaza lo mismo si se salta la validación del cliente.
+- [x] Durante el envío el botón está deshabilitado y muestra "TRANSMITIENDO…".
+- [x] Con `.env` válido, un envío correcto muestra la terminal con "MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, <NOMBRE>." y el correo llega a `CONTACT_TO_EMAIL` con asunto `[Arcade Vault] Nuevo mensaje de <nombre>` y `Reply-To` = correo del usuario.
+- [x] Sin `RESEND_API_KEY`, el envío muestra la línea `[ERR]`, conserva lo escrito y la página no se rompe.
+- [x] Con el campo `website` relleno, se muestra éxito y no se envía ningún correo.
+- [x] "ENVIAR OTRO MENSAJE" vuelve al formulario vacío.
+- [x] Un mensaje con `<script>` llega escapado en el HTML del correo.
+- [x] `RESEND_API_KEY` no aparece en el bundle del cliente (`grep -r RESEND_API_KEY .next/static` sin resultados).
+- [x] `.env.template` está commiteado; `.env` no aparece en `git status`.
+- [x] Los `.reveal` aparecen al hacer scroll y sin animación con `prefers-reduced-motion: reduce`.
+- [x] Sin scroll horizontal a ≤ 768 px; el grid de contacto pasa a una columna a ≤ 900 px.
+- [x] Campos y botones operables con teclado (foco visible) y con `label` asociado.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
+- [x] Capturas de Playwright en `.playwright-screenshots/` y artefactos en `.playwright-mcp/`, ignorados por git.
 
 ---
 
