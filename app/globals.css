@@ -1164,3 +1164,15 @@ a { color: inherit; text-decoration: none; }
   .reveal { opacity: 1; transform: none; }
 }
 
+
+/* estados de error del formulario de contacto */
+.field-error { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.5; color: #ff6b6b; }
+.field input[aria-invalid="true"], .contact-form textarea[aria-invalid="true"] { border-color: #ff6b6b; }
+.contact-form .btn:disabled { opacity: 0.6; cursor: progress; }
+.term-error {
+  margin: 16px 0 0; padding: 12px 14px; background: #000; border: 1px solid #ff6b6b;
+  font-family: var(--mono); font-size: 13px; line-height: 1.6; color: #ff6b6b;
+  box-shadow: 0 0 16px rgba(255,107,107,0.2);
+}
+.term-error .prompt { color: #ff6b6b; font-weight: 700; margin-right: 6px; }
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

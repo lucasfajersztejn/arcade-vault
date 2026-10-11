@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ContactForm } from "@/components/contact-form";
 import { HighlightIcon, type HighlightKind } from "@/components/highlight-icon";
 import { RevealObserver } from "@/components/reveal-observer";
 
@@ -63,24 +64,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Visual provisional: el paso 7 lo sustituye por <ContactForm /> */}
-          <div className="contact-form">
-            <div className="field">
-              <label htmlFor="contact-name">NOMBRE</label>
-              <input id="contact-name" placeholder="px_kai" />
-            </div>
-            <div className="field">
-              <label htmlFor="contact-email">CORREO ELECTRÓNICO</label>
-              <input id="contact-email" type="email" placeholder="jugador@vault.gg" />
-            </div>
-            <div className="field">
-              <label htmlFor="contact-msg">MENSAJE</label>
-              <textarea id="contact-msg" rows={5} placeholder="Cuéntanos qué tienes en mente…"></textarea>
-            </div>
-            <button className="btn xl press" type="button" style={{ width: "100%" }}>
-              ▶&nbsp; ENVIAR MENSAJE
-            </button>
-          </div>
+          <ContactForm />
         </div>
       </section>
     </div>
