@@ -132,7 +132,7 @@ function ContactFormInner({ onReset }: { onReset: () => void }) {
       </div>
 
       {/* Honeypot: invisible para personas; los bots lo rellenan. */}
-      <div className="hp-field" aria-hidden="true">
+      <div className="hp-field" inert>
         <label htmlFor="contact-website">Sitio web</label>
         <input id="contact-website" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
