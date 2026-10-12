@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
-import { AsteroidsCanvas, AsteroidsControls, type AsteroidsHandle } from "@/components/asteroids-canvas";
 import { submitScore } from "@/lib/db/scores";
+import { ENGINES, type EngineHandle } from "@/lib/games/registry";
 import { useSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/client";
 import type { Game } from "@/lib/types";
@@ -23,26 +23,27 @@ export function GamePlayer({ game }: { game: Game }) {
   const [lives, setLives] = useState(LIVES);
   const [engineLevel, setEngineLevel] = useState(1);
   const modalRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<AsteroidsHandle>(null);
-  // Asteroids es el único juego con motor real; el resto sigue simulado.
-  const isAsteroids = game.id === "asteroids";
+  const engineRef = useRef<EngineHandle>(null);
+  // Los juegos con motor real están en el registro; el resto sigue simulado.
+  const engine = ENGINES[game.id];
+  const hasEngine = engine !== undefined;
 
   const name = nameInput ?? user?.name ?? "INVITADO";
-  const level = isAsteroids ? engineLevel : 1 + Math.floor(score / POINTS_PER_LEVEL);
+  const level = hasEngine ? engineLevel : 1 + Math.floor(score / POINTS_PER_LEVEL);
 
   // Puntuación simulada para los juegos que aún no tienen motor real.
   useEffect(() => {
-    if (isAsteroids || over || paused) return;
+    if (hasEngine || over || paused) return;
     const t = setInterval(() => setScore((s) => s + Math.floor(10 + Math.random() * 90)), 220);
     return () => clearInterval(t);
-  }, [isAsteroids, over, paused]);
+  }, [hasEngine, over, paused]);
 
   const restart = () => {
     setScore(0);
     setPaused(false);
     setOver(false);
     setSaveState("idle");
-    if (isAsteroids) {
+    if (hasEngine) {
       setLives(LIVES);
       setEngineLevel(1);
       engineRef.current?.restart();
@@ -59,7 +60,7 @@ export function GamePlayer({ game }: { game: Game }) {
   };
 
   const finish = () => {
-    if (isAsteroids) engineRef.current?.end();
+    if (hasEngine) engineRef.current?.end();
     else setOver(true);
   };
 
@@ -104,10 +105,12 @@ export function GamePlayer({ game }: { game: Game }) {
             <div className="l">Puntuación</div>
             <div className="v" aria-live="off">{score.toLocaleString("es-ES")}</div>
           </div>
-          <div className="hud-stat lives">
-            <div className="l">Vidas</div>
-            <div className="v" aria-label={`${lives} vidas`}>{lives > 0 ? "♥ ".repeat(lives).trim() : "—"}</div>
-          </div>
+          {(!engine || engine.hasLives) && (
+            <div className="hud-stat lives">
+              <div className="l">Vidas</div>
+              <div className="v" aria-label={`${lives} vidas`}>{lives > 0 ? "♥ ".repeat(lives).trim() : "—"}</div>
+            </div>
+          )}
           <div className="hud-stat level">
             <div className="l">Nivel</div>
             <div className="v">{String(level).padStart(2, "0")}</div>
@@ -130,10 +133,10 @@ export function GamePlayer({ game }: { game: Game }) {
         <div
           className="crt-screen"
           role="img"
-          aria-label={isAsteroids ? "Juego Asteroids en curso" : `Pantalla simulada de ${game.title}`}
+          aria-label={engine ? engine.ariaLabel : `Pantalla simulada de ${game.title}`}
         >
-          {isAsteroids ? (
-            <AsteroidsCanvas
+          {engine ? (
+            <engine.Canvas
               ref={engineRef}
               onScore={setScore}
               onLives={setLives}
@@ -167,7 +170,7 @@ export function GamePlayer({ game }: { game: Game }) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
-      {isAsteroids && <AsteroidsControls />}
+      {engine && <engine.Controls />}
 
       {over && (
         <div className="modal-bd">
