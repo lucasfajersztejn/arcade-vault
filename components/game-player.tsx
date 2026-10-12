@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
+import { AsteroidsCanvas, AsteroidsControls, type AsteroidsHandle } from "@/components/asteroids-canvas";
 import { saveScore } from "@/lib/scores";
 import { useSession } from "@/lib/session";
 import type { Game } from "@/lib/types";
@@ -18,23 +19,53 @@ export function GamePlayer({ game }: { game: Game }) {
   const [over, setOver] = useState(false);
   const [nameInput, setNameInput] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [lives, setLives] = useState(LIVES);
+  const [engineLevel, setEngineLevel] = useState(1);
   const modalRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<AsteroidsHandle>(null);
+  // Asteroids es el único juego con motor real; el resto sigue simulado.
+  const isAsteroids = game.id === "asteroids";
 
   const name = nameInput ?? user?.name ?? "INVITADO";
-  const level = 1 + Math.floor(score / POINTS_PER_LEVEL);
+  const level = isAsteroids ? engineLevel : 1 + Math.floor(score / POINTS_PER_LEVEL);
 
-  // Puntuación simulada: no hay juego real en este MVP.
+  // Puntuación simulada para los juegos que aún no tienen motor real.
   useEffect(() => {
-    if (over || paused) return;
+    if (isAsteroids || over || paused) return;
     const t = setInterval(() => setScore((s) => s + Math.floor(10 + Math.random() * 90)), 220);
     return () => clearInterval(t);
-  }, [over, paused]);
+  }, [isAsteroids, over, paused]);
 
   const restart = () => {
     setScore(0);
     setPaused(false);
     setOver(false);
     setSaveState("idle");
+    if (isAsteroids) {
+      setLives(LIVES);
+      setEngineLevel(1);
+      engineRef.current?.restart();
+    }
+  };
+
+  const togglePause = (e: MouseEvent<HTMLButtonElement>) => {
+    const next = !paused;
+    setPaused(next);
+    if (next) engineRef.current?.pause();
+    else engineRef.current?.resume();
+    // Tras un clic de ratón el botón no debe retener el foco: Espacio dispararía en vez de activarlo.
+    if (e.detail > 0) e.currentTarget.blur();
+  };
+
+  const finish = () => {
+    if (isAsteroids) engineRef.current?.end();
+    else setOver(true);
+  };
+
+  const handleGameOver = (finalScore: number) => {
+    setScore(finalScore);
+    setPaused(false);
+    setOver(true);
   };
 
   const save = () => {
@@ -71,7 +102,7 @@ export function GamePlayer({ game }: { game: Game }) {
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
-            <div className="v" aria-label={`${LIVES} vidas`}>{"♥ ".repeat(LIVES).trim()}</div>
+            <div className="v" aria-label={`${lives} vidas`}>{lives > 0 ? "♥ ".repeat(lives).trim() : "—"}</div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
@@ -79,10 +110,10 @@ export function GamePlayer({ game }: { game: Game }) {
           </div>
         </div>
         <div className="hud-actions">
-          <button type="button" className="btn yellow" onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
+          <button type="button" className="btn yellow" onClick={togglePause} aria-pressed={paused}>
             {paused ? "REANUDAR" : "PAUSA"}
           </button>
-          <button type="button" className="btn magenta" onClick={() => setOver(true)}>
+          <button type="button" className="btn magenta" onClick={finish}>
             FIN
           </button>
           <Link href={`/games/${game.id}`} className="btn ghost">
@@ -92,14 +123,29 @@ export function GamePlayer({ game }: { game: Game }) {
       </div>
 
       <div className="crt">
-        <div className="crt-screen" role="img" aria-label={`Pantalla simulada de ${game.title}`}>
-          <div className="game-arena">
-            <div className="grid-floor"></div>
-            <div className="enemy e1"></div>
-            <div className="enemy e2"></div>
-            <div className="enemy e3"></div>
-            <div className="player-ship"></div>
-          </div>
+        <div
+          className="crt-screen"
+          role="img"
+          aria-label={isAsteroids ? "Juego Asteroids en curso" : `Pantalla simulada de ${game.title}`}
+        >
+          {isAsteroids ? (
+            <AsteroidsCanvas
+              ref={engineRef}
+              onScore={setScore}
+              onLives={setLives}
+              onLevel={setEngineLevel}
+              onGameOver={handleGameOver}
+              onPause={setPaused}
+            />
+          ) : (
+            <div className="game-arena">
+              <div className="grid-floor"></div>
+              <div className="enemy e1"></div>
+              <div className="enemy e2"></div>
+              <div className="enemy e3"></div>
+              <div className="player-ship"></div>
+            </div>
+          )}
           {paused && (
             <div className="crt-content" style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }} role="status">
               <div>
@@ -117,6 +163,7 @@ export function GamePlayer({ game }: { game: Game }) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+      {isAsteroids && <AsteroidsControls />}
 
       {over && (
         <div className="modal-bd">
