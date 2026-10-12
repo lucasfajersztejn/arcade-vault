@@ -1,0 +1,7 @@
+.next/
+node_modules/
+refereences/
+public/
+package-lock.json
+.playwright-mcp/
+.playwright-screenshots/
