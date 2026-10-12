@@ -2,9 +2,10 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { GAMES, seededScores } from "@/lib/data";
+import { seededScores } from "@/lib/data";
 import { parseScores, readScoresRaw, subscribeScores } from "@/lib/scores";
 import { useSession } from "@/lib/session";
+import type { Game } from "@/lib/types";
 
 const TOP_CLASS = ["top1", "top2", "top3"];
 
@@ -13,11 +14,11 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const fmtDate = (ms: number) =>
   new Date(ms).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-export function HallOfFame() {
+export function HallOfFame({ games }: { games: Game[] }) {
   const { user } = useSession();
-  const [tab, setTab] = useState(GAMES[0].id);
+  const [tab, setTab] = useState(games[0].id);
   const rows = useMemo(() => seededScores(tab.length * 23 + 7, 12), [tab]);
-  const game = GAMES.find((g) => g.id === tab) ?? GAMES[0];
+  const game = games.find((g) => g.id === tab) ?? games[0];
 
   const rawScores = useSyncExternalStore(subscribeScores, readScoresRaw, () => null);
   const saved = useMemo(() => parseScores(rawScores), [rawScores]);
@@ -47,7 +48,7 @@ export function HallOfFame() {
       </div>
 
       <div className="hall-tabs" role="group" aria-label="Elegir juego">
-        {GAMES.map((g) => (
+        {games.map((g) => (
           <button
             key={g.id}
             type="button"

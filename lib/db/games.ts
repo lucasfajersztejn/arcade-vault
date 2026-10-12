@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type { GameCategory, GameColor, GameWithStats } from "@/lib/types";
+import type { Game, GameCategory, GameColor } from "@/lib/types";
 type Db = SupabaseClient<Database>;
 type GameRow = Database["public"]["Tables"]["games"]["Row"];
 type StatsRow = Database["public"]["Views"]["game_stats"]["Row"];
 // `cat` y `color` están acotados por CHECK en la tabla, por eso el cast es seguro.
-function toGame(row: GameRow, stats: StatsRow | undefined): GameWithStats {
+function toGame(row: GameRow, stats: StatsRow | undefined): Game {
   return {
     id: row.id,
     title: row.title,
@@ -19,7 +19,7 @@ function toGame(row: GameRow, stats: StatsRow | undefined): GameWithStats {
   };
 }
 /** Catálogo completo en el orden de `sort_order`, con `plays` y `best` calculados. Lanza si Supabase falla. */
-export async function getGames(supabase: Db): Promise<GameWithStats[]> {
+export async function getGames(supabase: Db): Promise<Game[]> {
   const [games, stats] = await Promise.all([
     supabase.from("games").select("*").order("sort_order"),
     supabase.from("game_stats").select("*"),
@@ -30,10 +30,7 @@ export async function getGames(supabase: Db): Promise<GameWithStats[]> {
   return games.data.map((g) => toGame(g, byId.get(g.id)));
 }
 /** Un juego por id, o null si no existe. Lanza si Supabase falla. */
-export async function getGame(
-  supabase: Db,
-  id: string,
-): Promise<GameWithStats | null> {
+export async function getGame(supabase: Db, id: string): Promise<Game | null> {
   const [game, stats] = await Promise.all([
     supabase.from("games").select("*").eq("id", id).maybeSingle(),
     supabase.from("game_stats").select("*").eq("game_id", id).maybeSingle(),

@@ -9,12 +9,9 @@ export interface Game {
   /** Clase CSS de la portada, p.ej. "cover-bricks" */
   cover: string;
   color: GameColor;
+  /** Mejor marca global (MAX de scores); 0 si no hay partidas */
   best: number;
-  /** Ya formateado, p.ej. "12.4K" */
-  plays: string;
-}
-/** Juego tal como sale de la BD: `best` y `plays` calculados desde `scores`. Sustituye a `Game` en el paso 6. */
-export interface GameWithStats extends Omit<Game, "plays"> {
+  /** Partidas jugadas (COUNT de scores); se formatea en la UI con `formatPlays` */
   plays: number;
 }
 /** Mejor marca de un jugador en un juego, con su rango. */
