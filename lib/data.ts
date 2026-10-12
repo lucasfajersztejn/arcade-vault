@@ -68,6 +68,17 @@ export const GAMES: Game[] = [
     plays: "15.6K",
   },
   {
+    id: "asteroids",
+    title: "ASTEROIDS",
+    short: "Pilota tu nave y pulveriza el campo de asteroides.",
+    long: "Una nave con inercia flota en un espacio sin bordes. Rota, propulsa y dispara para partir asteroides grandes en fragmentos cada vez más pequeños. Recoge el power-up 3x para disparar en abanico. Tienes tres vidas: úsalas bien.",
+    cat: "SHOOTER",
+    cover: "cover-asteroids",
+    color: "cyan",
+    best: 0,
+    plays: "0",
+  },
+  {
     id: "ranaria",
     title: "RANARIA",
     short: "Cruza la autopista de pixeles.",
