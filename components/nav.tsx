@@ -8,6 +8,7 @@ import { useSession } from "@/lib/session";
 const LINKS = [
   { href: "/games", label: "Biblioteca", match: (p: string) => p.startsWith("/games") },
   { href: "/salon", label: "Salón de la Fama", match: (p: string) => p.startsWith("/salon") },
+  { href: "/about", label: "Acerca de", match: (p: string) => p.startsWith("/about") },
 ] as const;
 
 export function Nav() {
