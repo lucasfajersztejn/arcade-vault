@@ -1,6 +1,6 @@
 # SPEC 05 — Añadir el juego Asteroids como juego nuevo del catálogo
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 02 (`specs/02-mover-biblioteca-a-games-y-404.md`, Implementado) por las rutas `/games/[id]/jugar`; SPEC 01 (`specs/01-mvp-pantallas-visuales.md`, Implementado) por `GamePlayer`, el marco CRT y `av_scores`
 **Fecha:** 2026-10-12
 **Objetivo:** Añadir al catálogo un juego nuevo `asteroids` (id `asteroids`) con el Asteroids real de `refereences/started-games/02-asteroids`, portado a un motor TypeScript con canvas montado en `GamePlayer`, con HUD, pausa y guardado de puntuación de la plataforma, dejando `rocas` intacto.
@@ -134,27 +134,27 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 
 ## Criterios de aceptación
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `/games` muestra 9 tarjetas, incluida «ASTEROIDS» con su portada (`cover-asteroids`) y la categoría SHOOTER; «ROCAS» sigue presente con su portada y datos originales. El filtro SHOOTER lista ambos.
-- [ ] `/games/asteroids` muestra el detalle y «JUGAR AHORA» lleva a `/games/asteroids/jugar`.
-- [ ] `/games/asteroids/jugar` muestra el canvas del juego dentro del marco CRT; no aparece la arena simulada ni el `setInterval` de puntuación para `asteroids`.
-- [ ] Con el teclado, `←` `→` rotan la nave, `↑` propulsa con inercia y `Espacio` dispara con 0,2 s de cadencia; la nave y los disparos atraviesan los bordes y reaparecen por el lado opuesto.
-- [ ] Un asteroide grande (3) destruido suma 20 puntos y se parte en dos medianos; un mediano suma 50 y se parte en dos pequeños; un pequeño suma 100 y no se parte. El HUD de la plataforma refleja la puntuación al instante.
-- [ ] El HUD muestra las vidas reales (3 al inicio, baja al chocar) y el nivel real (sube al destruir todos los asteroides, con `3 + nivel` asteroides nuevos); tras chocar la nave reaparece a los ~2 s con 3 s de invencibilidad parpadeante.
-- [ ] El power-up «3x» aparece, al recogerlo se disparan 3 balas en abanico durante 5 s y el canvas muestra la cuenta atrás en cian.
-- [ ] PAUSA congela asteroides, balas y nave (el estado no cambia durante la pausa) y REANUDAR continúa sin saltos; ocultar la pestaña o perder el foco de la ventana pausa el juego.
-- [ ] Al perder la 3.ª vida, o al pulsar FIN, se abre el modal «FIN DEL JUEGO» con la puntuación final correcta; el canvas no muestra «ESPACIO PARA REINICIAR».
-- [ ] «GUARDAR PUNTUACIÓN» guarda una entrada con `game: "asteroids"` en `av_scores` y aparece en `/salon`.
-- [ ] Escribir un nombre con la barra espaciadora o las flechas dentro del input del modal no dispara ni mueve la nave, y no hace scroll de la página.
-- [ ] «JUGAR DE NUEVO» reinicia con 3 vidas, nivel 1 y puntuación 0 sin duplicar el bucle (la velocidad del juego no aumenta tras varios reinicios).
-- [ ] Salir con SALIR / navegar a otra ruta y volver no deja listeners ni bucles activos: tras desmontar, `Espacio` y las flechas vuelven a hacer scroll normal en otras páginas.
-- [ ] El canvas se ve nítido a escala y sin scroll horizontal a ancho ≤ 768 px; en pantalla táctil / ancho estrecho se muestra el aviso «requiere teclado».
-- [ ] `/games/rocas/jugar`, `/games/caida/jugar` y el resto de juegos conservan la simulación actual (puntuación que sube sola, vidas = 3).
-- [ ] En `lib/data.ts` la entrada `rocas` no tiene ningún cambio (`git diff` solo añade la entrada `asteroids`).
-- [ ] `refereences/started-games/02-asteroids/` sin cambios en `git status`.
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para el trabajo visual de esta spec y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
-- [ ] Las capturas de Playwright están en `.playwright-screenshots/` y los artefactos del MCP en `.playwright-mcp/`.
-- [ ] La sesión (`av_user`) y las puntuaciones previas (`av_scores`) siguen funcionando.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `/games` muestra 9 tarjetas, incluida «ASTEROIDS» con su portada (`cover-asteroids`) y la categoría SHOOTER; «ROCAS» sigue presente con su portada y datos originales. El filtro SHOOTER lista ambos.
+- [x] `/games/asteroids` muestra el detalle y «JUGAR AHORA» lleva a `/games/asteroids/jugar`.
+- [x] `/games/asteroids/jugar` muestra el canvas del juego dentro del marco CRT; no aparece la arena simulada ni el `setInterval` de puntuación para `asteroids`.
+- [x] Con el teclado, `←` `→` rotan la nave, `↑` propulsa con inercia y `Espacio` dispara con 0,2 s de cadencia; la nave y los disparos atraviesan los bordes y reaparecen por el lado opuesto.
+- [x] Un asteroide grande (3) destruido suma 20 puntos y se parte en dos medianos; un mediano suma 50 y se parte en dos pequeños; un pequeño suma 100 y no se parte. El HUD de la plataforma refleja la puntuación al instante.
+- [x] El HUD muestra las vidas reales (3 al inicio, baja al chocar) y el nivel real (sube al destruir todos los asteroides, con `3 + nivel` asteroides nuevos); tras chocar la nave reaparece a los ~2 s con 3 s de invencibilidad parpadeante.
+- [x] El power-up «3x» aparece, al recogerlo se disparan 3 balas en abanico durante 5 s y el canvas muestra la cuenta atrás en cian.
+- [x] PAUSA congela asteroides, balas y nave (el estado no cambia durante la pausa) y REANUDAR continúa sin saltos; ocultar la pestaña o perder el foco de la ventana pausa el juego.
+- [x] Al perder la 3.ª vida, o al pulsar FIN, se abre el modal «FIN DEL JUEGO» con la puntuación final correcta; el canvas no muestra «ESPACIO PARA REINICIAR».
+- [x] «GUARDAR PUNTUACIÓN» guarda una entrada con `game: "asteroids"` en `av_scores`; con sesión iniciada, la mejor marca de ese usuario aparece en su fila «TU MEJOR MARCA EN ASTEROIDS» de `/salon` (el Salón no lista en su tabla las puntuaciones guardadas, solo la mejor del usuario con sesión).
+- [x] Escribir un nombre con la barra espaciadora o las flechas dentro del input del modal no dispara ni mueve la nave, y no hace scroll de la página.
+- [x] «JUGAR DE NUEVO» reinicia con 3 vidas, nivel 1 y puntuación 0 sin duplicar el bucle (la velocidad del juego no aumenta tras varios reinicios).
+- [x] Salir con SALIR / navegar a otra ruta y volver no deja listeners ni bucles activos: tras desmontar, `Espacio` y las flechas vuelven a hacer scroll normal en otras páginas.
+- [ ] El canvas se ve nítido a escala y sin scroll horizontal a ancho ≤ 768 px; en pantalla táctil / ancho estrecho se muestra el aviso «requiere teclado». *(Pendiente: la regla CSS `(pointer: coarse)` existe y el aviso está oculto en escritorio, pero no se vio activo en un dispositivo táctil real; el resto del criterio se verificó.)*
+- [x] `/games/rocas/jugar`, `/games/caida/jugar` y el resto de juegos conservan la simulación actual (puntuación que sube sola, vidas = 3).
+- [x] En `lib/data.ts` la entrada `rocas` no tiene ningún cambio (`git diff` solo añade la entrada `asteroids`).
+- [x] `refereences/started-games/02-asteroids/` sin cambios en `git status`.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para el trabajo visual de esta spec y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
+- [x] Las capturas de Playwright están en `.playwright-screenshots/` y los artefactos del MCP en `.playwright-mcp/`.
+- [x] La sesión (`av_user`) y las puntuaciones previas (`av_scores`) siguen funcionando.
 
 ---
 
