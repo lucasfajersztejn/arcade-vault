@@ -4,6 +4,7 @@ import {
   AsteroidsCanvas,
   AsteroidsControls,
 } from "@/components/asteroids-canvas";
+import { CaidaCanvas, CaidaControls } from "@/components/caida-canvas";
 /** Lo que `GamePlayer` puede pedirle a cualquier motor montado. */
 export type EngineHandle = {
   pause: () => void;
@@ -35,5 +36,11 @@ export const ENGINES: Record<string, EngineEntry> = {
     Controls: AsteroidsControls,
     hasLives: true,
     ariaLabel: "Juego Asteroids en curso",
+  },
+  caida: {
+    Canvas: CaidaCanvas,
+    Controls: CaidaControls,
+    hasLives: false,
+    ariaLabel: "Juego Caída en curso",
   },
 };

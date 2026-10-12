@@ -105,10 +105,12 @@ export function GamePlayer({ game }: { game: Game }) {
             <div className="l">Puntuación</div>
             <div className="v" aria-live="off">{score.toLocaleString("es-ES")}</div>
           </div>
-          <div className="hud-stat lives">
-            <div className="l">Vidas</div>
-            <div className="v" aria-label={`${lives} vidas`}>{lives > 0 ? "♥ ".repeat(lives).trim() : "—"}</div>
-          </div>
+          {(!engine || engine.hasLives) && (
+            <div className="hud-stat lives">
+              <div className="l">Vidas</div>
+              <div className="v" aria-label={`${lives} vidas`}>{lives > 0 ? "♥ ".repeat(lives).trim() : "—"}</div>
+            </div>
+          )}
           <div className="hud-stat level">
             <div className="l">Nivel</div>
             <div className="v">{String(level).padStart(2, "0")}</div>
