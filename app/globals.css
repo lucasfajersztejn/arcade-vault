@@ -1211,6 +1211,131 @@ a {
   height: 100%;
   background: #000;
 }
+/* caida: Tetris real dentro del marco CRT. El panel lateral conserva el aspecto del original (solo tema oscuro). */
+.crt-screen:has(> .caida-stage) {
+  aspect-ratio: auto;
+  background: #0f0f17;
+}
+.caida-stage {
+  --caida-canvas: #1a1a25;
+  --caida-border: #2a2a3a;
+  --caida-label: #555570;
+  --caida-controls: #888;
+  --caida-kbd-bg: #22223a;
+  --caida-kbd-border: #3a3a5a;
+  --caida-kbd-text: #aaa;
+  --caida-accent: #7aa2f7;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 16px;
+  color: #e0e0e0;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  user-select: none;
+}
+.caida-board {
+  display: block;
+  flex: 0 1 300px;
+  min-width: 0;
+  aspect-ratio: 1 / 2;
+  height: auto;
+  border: 1px solid var(--caida-border);
+  background: var(--caida-canvas);
+  border-radius: 4px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+}
+.caida-panel {
+  flex: 0 0 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 4px;
+}
+.caida-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.caida-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--caida-label);
+  font-weight: 600;
+}
+.caida-value {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--caida-accent);
+  letter-spacing: 1px;
+}
+.caida-next {
+  display: block;
+  width: 120px;
+  height: 120px;
+  border: 1px solid var(--caida-border);
+  background: var(--caida-canvas);
+  border-radius: 4px;
+}
+.caida-section-controls ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.caida-section-controls li {
+  font-size: 12px;
+  color: var(--caida-controls);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.caida-section-controls kbd {
+  background: var(--caida-kbd-bg);
+  border: 1px solid var(--caida-kbd-border);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--caida-kbd-text);
+}
+/* ≤ 768 px: el panel pasa bajo el tablero y los marcadores se reparten en una fila. */
+@media (max-width: 768px) {
+  .caida-stage {
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px;
+  }
+  .caida-board {
+    flex: 0 0 auto;
+    width: min(300px, 100%);
+  }
+  .caida-panel {
+    flex: 0 0 auto;
+    width: min(300px, 100%);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px 12px;
+  }
+  .caida-value {
+    font-size: 20px;
+  }
+  .caida-section-next,
+  .caida-section-controls {
+    grid-column: 1 / -1;
+  }
+  .caida-section-controls ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+}
 .controls-legend {
   list-style: none;
   display: flex;
