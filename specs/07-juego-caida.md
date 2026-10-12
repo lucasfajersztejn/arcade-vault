@@ -1,6 +1,6 @@
 # SPEC 07 — Convertir CAÍDA en un Tetris real
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 05 (`specs/05-juego-asteroids.md`) por el patrón de motor, canvas y `GamePlayer`; SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por las tablas `games`/`scores` y el leaderboard
 **Fecha:** 2026-10-12
 **Objetivo:** Convertir el juego simulado `caida` en un Tetris real, portado de `refereences/started-games/03-tetris` (7 piezas), con HUD, pausa, guardado de puntuación y leaderboard de la plataforma.
@@ -44,7 +44,7 @@ Se porta el Tetris de `refereences/started-games/03-tetris` conservando sus cons
   - Game over cuando una pieza nueva colisiona al aparecer.
 - Controles de teclado: `←` `→` mover, `↑` o `X` rotar, `↓` soft drop, `Espacio` hard drop, `P` pausa/reanudar. Se usa `preventDefault` solo con el motor activo y el foco fuera de un `input`. Aviso «requiere teclado» en `(pointer: coarse)`.
 - Layout responsive: a ≤ 768 px el panel lateral se apila bajo el tablero.
-- Catálogo: se conserva el `id` `caida` y su portada `cover-tetro`. Migración que borra las `scores` de `caida` (eran del simulado). El texto del juego no cambia.
+- Catálogo: se conserva el `id` `caida` y su portada `cover-tetro`. Migración que borra las `scores` de `caida` (eran del simulado) y otra que siembra 10 puntuaciones ficticias de ejemplo, con el mismo formato que los demás juegos, para que el ranking no salga vacío (añadido durante la implementación, a petición del usuario). El texto del juego no cambia.
 - Diseño: usar SIEMPRE y obligatoriamente `/frontend-design` y `/ui-ux-pro-max` (CLAUDE.md) para la integración en el marco CRT, el panel lateral, el aviso de teclado y la ocultación de «Vidas». No se escribe ni modifica UI sin invocarlos.
 - Revisión de la documentación local de Next 16.4 (`node_modules/next/dist/docs/`) antes de escribir código.
 - Verificación con Playwright: capturas en `.playwright-screenshots/`, artefactos del MCP en `.playwright-mcp/`.
@@ -61,7 +61,7 @@ Se porta el Tetris de `refereences/started-games/03-tetris` conservando sus cons
 - Sonido y música.
 - Soporte HiDPI.
 - Cambios de balance o mecánicas distintos de quitar la `N`.
-- Seed de puntuaciones de ejemplo.
+- Seed de puntuaciones distinto de las 10 filas ficticias de `caida`.
 - Tests automatizados.
 - Cambios en `lib/db/*`, `/salon`, `Leaderboard`, `Library`, RLS o esquema.
 - Los demás juegos del catálogo.
@@ -73,14 +73,33 @@ Se porta el Tetris de `refereences/started-games/03-tetris` conservando sus cons
 
 Conversión de un simulado: se conserva el `id` `caida`, su fila en `games` y su portada `cover-tetro`. No hay `insert` ni cambio de texto: el `short` y el `long` actuales («…La velocidad aumenta sin piedad cada 10 líneas.») ya describen el juego real.
 
-Una única migración (`apply_migration`) borra las puntuaciones del simulado:
+Dos migraciones (`apply_migration`). La primera borra las puntuaciones del simulado:
 
 ```sql
 -- Puntuaciones del CAÍDA simulado (setInterval): no corresponden al Tetris real.
 delete from public.scores where game_id = 'caida';
 ```
 
-Antes: 10 filas, mejor marca 184 220. Después, `plays` y «Mejor global» de `/games/caida` salen a 0 por la vista `game_stats`, y el ranking muestra «Sé el primero en puntuar». No se crean tablas ni columnas; no se tocan RLS ni las vistas `leaderboard` y `game_stats` (SPEC 06).
+Antes: 10 filas, mejor marca 184 220. Después, `plays` y «Mejor global» de `/games/caida` salen a 0 por la vista `game_stats`, y el ranking muestra «Sé el primero en puntuar».
+
+La segunda (`seed_example_caida_scores`) se aplica **después de verificar los criterios con el ranking vacío** y siembra 10 puntuaciones ficticias, con los mismos apodos, el mismo espaciado de fechas (cada 3 días, a las 12:00 UTC) y la misma convención que el seed de los otros juegos (`seed_games_and_example_scores`). Las marcas son realistas para este Tetris (puntos × nivel):
+
+```sql
+-- Puntuaciones FICTICIAS de ejemplo para CAÍDA: jugadores y marcas inventados.
+insert into public.scores (game_id, player_name, score, created_at) values
+  ('caida', 'VAULT_07',  24380, '2026-10-02 12:00:00+00'),
+  ('caida', 'GLITCHA',   19650, '2026-09-29 12:00:00+00'),
+  ('caida', 'ATARI_KID', 15820, '2026-09-26 12:00:00+00'),
+  ('caida', 'CYBER_LU',  12475, '2026-09-23 12:00:00+00'),
+  ('caida', 'MAGENTA88',  9930, '2026-09-20 12:00:00+00'),
+  ('caida', 'SCANLINE',   7640, '2026-09-17 12:00:00+00'),
+  ('caida', 'BIT_LORD',   5410, '2026-09-14 12:00:00+00'),
+  ('caida', 'ARKADYA',    3880, '2026-09-11 12:00:00+00'),
+  ('caida', 'DROID_X',    2560, '2026-09-08 12:00:00+00'),
+  ('caida', 'RGB_QUEEN',  1420, '2026-09-05 12:00:00+00');
+```
+
+Tras el seed, `plays = 10` y «Mejor global» = 24 380 en `/games/caida`. No se crean tablas ni columnas; no se tocan RLS ni las vistas `leaderboard` y `game_stats` (SPEC 06).
 
 Contrato del motor (amplía el de Asteroids con `onLines` y el canvas de NEXT):
 
@@ -143,7 +162,7 @@ Constantes que se conservan tal cual del original:
 | `lib/games/registry.ts`                                   | crear: `ENGINES` con `asteroids` y `caida`                                                                                                        |
 | `components/game-player.tsx`                              | modificar: consulta `ENGINES[game.id]` en vez de `isAsteroids`; oculta «Vidas» si `hasLives` es falso                                             |
 | `app/globals.css`                                         | modificar: estilos del panel interior con prefijo propio (`.caida-*`), layout apilado a ≤ 768 px, aviso de teclado; `cover-tetro` no cambia       |
-| Migración Supabase (`apply_migration`)                    | crear: `delete from public.scores where game_id = 'caida'`                                                                                        |
+| Migración Supabase (`apply_migration`)                    | crear (2): `delete` de `scores` de `caida` y seed de 10 puntuaciones ficticias                                                                    |
 | `lib/games/asteroids/`, `components/asteroids-canvas.tsx` | **no se modifican**                                                                                                                               |
 | `refereences/started-games/03-tetris/`                    | **no se modifica**                                                                                                                                |
 
@@ -161,7 +180,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 6. **Componente canvas y estilos:** `caida-canvas.tsx` con el canvas 300×600, el panel lateral con los estilos del original (solo tema oscuro) y los valores que llegan por callback (SCORE, LINES, LEVEL). Reenvía `onScore`/`onLevel`/`onGameOver`/`onPause` al padre y guarda `lines` en su propio estado. Limpieza en el `return` del `useEffect` (Strict Mode). Estilos `.caida-*` y apilado a ≤ 768 px en `app/globals.css`.
 7. **Registro de motores y `GamePlayer`:** crear `lib/games/registry.ts` con `asteroids` (`hasLives: true`) y mover a él las referencias de `GamePlayer` (`isAsteroids`, `AsteroidsCanvas`, `AsteroidsControls`) sin tocar su motor. `GamePlayer` consulta `ENGINES[game.id]`: sin entrada, conserva la simulación (`setInterval` y `.game-arena`). Es un refactor sin cambio funcional. Comprobar `/games/asteroids/jugar` y un simulado.
 8. **Registrar `caida`:** añadir su entrada al registro (`hasLives: false`, `ariaLabel` propio, panel de controles). `GamePlayer` oculta el bloque «Vidas» y pasa `onLevel`; `/games/caida/jugar` usa el motor real.
-9. **Migración:** `apply_migration` con el `delete` de `scores`. Comprobar con `execute_sql` (`count(*)` en 0) y `get_advisors` de seguridad.
+9. **Migración:** `apply_migration` con el `delete` de `scores`. Comprobar con `execute_sql` (`count(*)` en 0) y `get_advisors` de seguridad. El seed ficticio (segunda migración) se aplica al final del paso 10, tras verificar los criterios con el ranking vacío.
 10. **Verificación:** recorrer los criterios de aceptación.
 
 La verificación va en los criterios de aceptación, no en un paso del plan.
@@ -179,7 +198,7 @@ Al terminar cada paso con cambios, quien implemente (`/spec-impl`) **propone** a
 | 7    | `feat: add game engine registry and move asteroids` |
 | 8    | `feat: connect caida engine to game player`         |
 | 9    | `feat: clear simulated caida scores`                |
-| 10   | `feat: finish caida spec verification`              |
+| 10   | `feat: seed example caida scores`                   |
 
 Los pasos 1 y 2 (lectura de documentación y skills) no producen cambios, por lo que no llevan commit. Los nombres son una propuesta y se ajustan si el contenido real del paso cambia.
 
@@ -189,62 +208,64 @@ Los pasos 1 y 2 (lectura de documentación y skills) no producen cambios, por lo
 
 ### Build y calidad
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración.
-- [ ] `grep -r "service_role" app components lib` no devuelve resultados.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [ ] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración. *(Pendiente: devuelve 2 avisos sobre `public.rls_auto_enable()` (función `SECURITY DEFINER` ejecutable por `anon` y `authenticated`), ajenos a esta spec; son los mismos tras las dos migraciones, pero no hay medición previa para confirmar que no son nuevos.)*
+- [x] `grep -r "service_role" app components lib` no devuelve resultados.
 
 ### Catálogo (conversión de `caida`)
 
-- [ ] `select id, title, cat, cover, color, sort_order from games where id = 'caida'` devuelve la misma fila que antes (`PUZZLE`, `cover-tetro`, `magenta`, `sort_order` 2).
-- [ ] `/games` muestra las mismas 9 tarjetas en el mismo orden; «CAÍDA» conserva su portada `cover-tetro`.
-- [ ] El filtro PUZZLE sigue incluyendo CAÍDA.
-- [ ] `/games/caida` muestra el detalle y «JUGAR AHORA» lleva a `/games/caida/jugar`.
-- [ ] `select count(*) from scores where game_id = 'caida'` devuelve 0 tras la migración, y `scores` de los demás juegos no cambian.
+- [x] `select id, title, cat, cover, color, sort_order from games where id = 'caida'` devuelve la misma fila que antes (`PUZZLE`, `cover-tetro`, `magenta`, `sort_order` 2).
+- [x] `/games` muestra las mismas 9 tarjetas en el mismo orden; «CAÍDA» conserva su portada `cover-tetro`.
+- [x] El filtro PUZZLE sigue incluyendo CAÍDA.
+- [x] `/games/caida` muestra el detalle y «JUGAR AHORA» lleva a `/games/caida/jugar`.
+- [x] `select count(*) from scores where game_id = 'caida'` devuelve 0 tras la primera migración, y `scores` de los demás juegos no cambian.
+- [x] Tras el seed, `scores` tiene 10 filas de `caida` (mejor marca 24 380, `VAULT_07`) y los demás juegos no cambian. *(10 filas al aplicar el seed; después se suman las partidas reales que se jueguen.)*
 
 ### Juego
 
-- [ ] `/games/caida/jugar` muestra el tablero 300×600 con el panel lateral dentro del marco CRT; no aparecen la arena simulada ni el `setInterval` de puntuación.
-- [ ] Solo salen las 7 piezas I, O, T, S, Z, J, L: tras ≥ 100 piezas generadas no aparece la tuerca gris `N` ni ninguna pieza de 3×3 en anillo.
-- [ ] Controles: `←` `→` mueven una columna sin salir del tablero; `↑` y `X` rotan en sentido horario; `↓` baja una fila; `Espacio` baja la pieza hasta el fondo y la fija.
-- [ ] Wall kicks: rotar una pieza pegada a la pared desplaza `0, -1, +1, -2, +2` columnas, en ese orden, y no gira si ninguna posición es válida.
-- [ ] Soft drop suma exactamente +1 por fila; hard drop suma +2 por celda recorrida; el HUD lo refleja al instante.
-- [ ] Limpiar 1, 2, 3 o 4 líneas a la vez suma 100, 300, 500 o 800 puntos × el nivel actual.
-- [ ] El nivel sube cada 10 líneas (`floor(líneas / 10) + 1`) y la caída automática pasa de 1000 ms a `max(100, 1000 − (nivel − 1) × 90)` ms.
-- [ ] La pieza fantasma se dibuja con alpha 0,2 donde aterrizará la pieza actual y se mueve con ella.
-- [ ] El panel NEXT muestra la pieza que saldrá a continuación y coincide con la que aparece al fijar la actual.
-- [ ] El panel interior muestra SCORE, LINES, LEVEL y CONTROLS con los estilos del original (tema oscuro), sin tema claro ni `localStorage` (`grep -r "localStorage" lib/games/caida components/caida-canvas.tsx` no devuelve resultados).
-- [ ] El HUD de la plataforma muestra Puntuación y Nivel con los mismos valores que el panel interior, y no muestra «Vidas»; en `asteroids` «Vidas» sigue visible.
-- [ ] PAUSA (botón) y la tecla `P` congelan el juego (la pieza no cae y las teclas de movimiento no hacen nada) y REANUDAR o `P` continúan sin saltos; `P` actualiza el estado del botón; ocultar la pestaña o perder el foco pausa.
-- [ ] El game over llega cuando una pieza nueva colisiona al aparecer, o al pulsar FIN, y abre «FIN DEL JUEGO» con la puntuación final correcta; el canvas no muestra su propio overlay ni reinicia con tecla.
-- [ ] «JUGAR DE NUEVO» reinicia con tablero vacío, puntuación 0, líneas 0 y nivel 1, sin duplicar el bucle (la velocidad de caída no aumenta tras varios reinicios).
-- [ ] Escribir un nombre en el input del modal (incluidas barra espaciadora y flechas) no mueve ni suelta piezas ni hace scroll.
-- [ ] Salir con SALIR o navegar a otra ruta no deja listeners ni bucles activos: las flechas y Espacio vuelven a hacer scroll en otras páginas.
-- [ ] A ancho ≤ 768 px el panel se apila bajo el tablero sin scroll horizontal; en `(pointer: coarse)` aparece el aviso «requiere teclado».
-- [ ] La puntuación enviada es un entero entre 0 y 99 999 999.
+- [x] `/games/caida/jugar` muestra el tablero 300×600 con el panel lateral dentro del marco CRT; no aparecen la arena simulada ni el `setInterval` de puntuación.
+- [x] Solo salen las 7 piezas I, O, T, S, Z, J, L: tras ≥ 100 piezas generadas no aparece la tuerca gris `N` ni ninguna pieza de 3×3 en anillo.
+- [x] Controles: `←` `→` mueven una columna sin salir del tablero; `↑` y `X` rotan en sentido horario; `↓` baja una fila; `Espacio` baja la pieza hasta el fondo y la fija.
+- [x] Wall kicks: rotar una pieza pegada a la pared desplaza `0, -1, +1, -2, +2` columnas, en ese orden, y no gira si ninguna posición es válida.
+- [x] Soft drop suma exactamente +1 por fila; hard drop suma +2 por celda recorrida; el HUD lo refleja al instante.
+- [x] Limpiar 1, 2, 3 o 4 líneas a la vez suma 100, 300, 500 o 800 puntos × el nivel actual.
+- [x] El nivel sube cada 10 líneas (`floor(líneas / 10) + 1`) y la caída automática pasa de 1000 ms a `max(100, 1000 − (nivel − 1) × 90)` ms.
+- [x] La pieza fantasma se dibuja con alpha 0,2 donde aterrizará la pieza actual y se mueve con ella.
+- [x] El panel NEXT muestra la pieza que saldrá a continuación y coincide con la que aparece al fijar la actual.
+- [x] El panel interior muestra SCORE, LINES, LEVEL y CONTROLS con los estilos del original (tema oscuro), sin tema claro ni `localStorage` (`grep -r "localStorage" lib/games/caida components/caida-canvas.tsx` no devuelve resultados).
+- [x] El HUD de la plataforma muestra Puntuación y Nivel con los mismos valores que el panel interior, y no muestra «Vidas»; en `asteroids` «Vidas» sigue visible.
+- [x] PAUSA (botón) y la tecla `P` congelan el juego (la pieza no cae y las teclas de movimiento no hacen nada) y REANUDAR o `P` continúan sin saltos; `P` actualiza el estado del botón; ocultar la pestaña o perder el foco pausa.
+- [x] El game over llega cuando una pieza nueva colisiona al aparecer, o al pulsar FIN, y abre «FIN DEL JUEGO» con la puntuación final correcta; el canvas no muestra su propio overlay ni reinicia con tecla.
+- [x] «JUGAR DE NUEVO» reinicia con tablero vacío, puntuación 0, líneas 0 y nivel 1, sin duplicar el bucle (la velocidad de caída no aumenta tras varios reinicios).
+- [x] Escribir un nombre en el input del modal (incluidas barra espaciadora y flechas) no mueve ni suelta piezas ni hace scroll.
+- [x] Salir con SALIR o navegar a otra ruta no deja listeners ni bucles activos: las flechas y Espacio vuelven a hacer scroll en otras páginas.
+- [ ] A ancho ≤ 768 px el panel se apila bajo el tablero sin scroll horizontal; en `(pointer: coarse)` aparece el aviso «requiere teclado». *(Pendiente: la regla CSS `(pointer: coarse)` existe y el aviso está oculto en escritorio, pero no se vio activo en un dispositivo táctil real; el resto del criterio se verificó a 390 px.)*
+- [x] La puntuación enviada es un entero entre 0 y 99 999 999.
 
 ### Leaderboard
 
-- [ ] «GUARDAR PUNTUACIÓN» crea una fila en `scores` con `game_id = 'caida'`, el nombre escrito (o `INVITADO`) y la puntuación final.
-- [ ] Sin puntuaciones, `/games/caida` muestra «Sé el primero en puntuar»; tras guardar una, aparece en el ranking al recargar.
-- [ ] Hay una pestaña «CAÍDA» en `/salon` con podio y tabla coherentes con la vista `leaderboard`.
-- [ ] Con sesión iniciada, «TU MEJOR MARCA EN CAÍDA» muestra la marca y el rango reales.
-- [ ] `plays` y «Mejor global» de `/games/caida` coinciden con `count(*)` y `max(score)` de `scores`.
+- [x] «GUARDAR PUNTUACIÓN» crea una fila en `scores` con `game_id = 'caida'`, el nombre escrito (o `INVITADO`) y la puntuación final.
+- [x] Sin puntuaciones (antes del seed), `/games/caida` muestra «Sé el primero en puntuar»; tras guardar una, aparece en el ranking al recargar.
+- [x] Tras el seed, `/games/caida` muestra el top 10 con `VAULT_07` (24 380) en primer lugar y `/salon` muestra podio y tabla de CAÍDA.
+- [x] Hay una pestaña «CAÍDA» en `/salon` con podio y tabla coherentes con la vista `leaderboard`.
+- [x] Con sesión iniciada, «TU MEJOR MARCA EN CAÍDA» muestra la marca y el rango reales.
+- [x] `plays` y «Mejor global» de `/games/caida` coinciden con `count(*)` y `max(score)` de `scores`.
 
 ### Sin regresiones
 
-- [ ] `/games/asteroids/jugar` funciona como antes (vidas, nivel, pausa, FIN, guardado) tras mover su integración al registro.
-- [ ] Un simulado (`/games/rocas/jugar`, `/games/serpentina/jugar`) conserva la puntuación que sube sola y las vidas = 3.
-- [ ] `git diff` no toca `lib/games/asteroids/` ni `components/asteroids-canvas.tsx`.
-- [ ] `git status` no muestra cambios en `refereences/`.
-- [ ] `lib/db/`, `app/salon/` y `components/leaderboard.tsx` no cambian.
-- [ ] La sesión `av_user` sigue funcionando.
+- [x] `/games/asteroids/jugar` funciona como antes (vidas, nivel, pausa, FIN, guardado) tras mover su integración al registro.
+- [x] Un simulado (`/games/rocas/jugar`, `/games/serpentina/jugar`) conserva la puntuación que sube sola y las vidas = 3.
+- [x] `git diff` no toca `lib/games/asteroids/` ni `components/asteroids-canvas.tsx`.
+- [x] `git status` no muestra cambios en `refereences/`.
+- [x] `lib/db/`, `app/salon/` y `components/leaderboard.tsx` no cambian.
+- [x] La sesión `av_user` sigue funcionando.
 
 ### Proceso
 
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para el panel lateral, el layout responsive, el aviso de teclado y el HUD sin «Vidas», y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
-- [ ] Se leyó la documentación local de Next 16.4 antes de escribir código.
-- [ ] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px).
-- [ ] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para el panel lateral, el layout responsive, el aviso de teclado y el HUD sin «Vidas», y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
+- [x] Se leyó la documentación local de Next 16.4 antes de escribir código.
+- [x] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px).
+- [x] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación.
 
 ### Verificación manual recomendada (paso final)
 
@@ -262,6 +283,7 @@ Los pasos 1 y 2 (lectura de documentación y skills) no producen cambios, por lo
 - **Se elimina la pieza `N` (tuerca).** El original añade este anillo 3×3 a las 7 piezas clásicas y su README no la documenta. Es la única desviación de mecánicas (`randomPiece()` sortea entre 7). _Descartado:_ conservarla; sorteo con bolsa de 7 (cambiaría el balance).
 - **Catálogo: conversión de `caida`.** Conserva `id`, portada `cover-tetro`, texto y `sort_order`. _Descartado:_ juego nuevo `tetris` (dos Tetris en el catálogo).
 - **Se borran las `scores` de `caida`.** Eran del simulado y no tienen sentido para el juego real. _Descartado:_ conservarlas (falsearían el ranking, con una mejor marca de 184 220).
+- **Seed de 10 puntuaciones ficticias para `caida`.** A petición del usuario durante el paso 10, para que el ranking no esté vacío cuando juegue alguien; sigue el formato del seed de los demás juegos y se aplica tras verificar el estado vacío. _Descartado:_ dejar el ranking vacío (mala primera impresión); reutilizar las 10 filas borradas (marcas del simulado, sin sentido para este Tetris).
 - **HUD interior conservado tal cual.** A petición del usuario, el panel lateral del original (SCORE, LINES, LEVEL, NEXT, CONTROLS) se mantiene dentro del juego, como bloque React con los estilos del original (solo tema oscuro). _Descartado:_ dibujarlo en el canvas (no reproduce la tipografía y los estilos); HUD solo en la plataforma (regla anterior de SPEC 05, revisada).
 - **HUD de la plataforma adaptado.** Puntuación y Nivel reales (duplicados con el panel interior) y «Vidas» oculto con `hasLives: false`. _Descartado:_ mostrar «—» en Vidas (Tetris no tiene vidas); añadir las líneas al HUD de la plataforma (se ven en el panel interior).
 - **Canvas lógico 300×600 con panel aparte.** El tablero conserva las medidas del original y el NEXT usa un segundo canvas 120×120 que recibe el motor (`opts.nextCanvas`). _Descartado:_ un canvas único de 420×600 con NEXT dibujado dentro.
@@ -292,6 +314,7 @@ Los pasos 1 y 2 (lectura de documentación y skills) no producen cambios, por lo
 | Duplicación de Puntuación y Nivel en dos HUD (plataforma e interior) que se desincronicen         | Ambos leen los mismos callbacks del motor (`onScore`, `onLevel`); criterio de igualdad de valores                                       |
 | Choque de estilos entre el CSS del original (`.panel`, `.label`, `.value`, `kbd`) y la plataforma | Todas las clases llevan prefijo `.caida-*` y no se importan reglas globales (`body`, `*`, `kbd`)                                        |
 | Entrada rápida (varias teclas por frame) y rotación cerca de la pared dan estados raros           | Lógica pura de `collide` y wall kicks portada literal; criterios de rotación y movimiento                                               |
+| Datos ficticios confundidos con reales                                                            | El SQL del seed los marca como ficticios y la migración tiene nombre propio; mismo criterio que el seed de los demás juegos            |
 | Borrar `scores` es irreversible                                                                   | Se confirma el `count` previo (10 filas, mejor marca 184 220) y la migración filtra solo `game_id = 'caida'`; son datos del simulado    |
 
 ---
@@ -307,7 +330,7 @@ Los pasos 1 y 2 (lectura de documentación y skills) no producen cambios, por lo
 - Los demás juegos del catálogo (Arkanoid, Serpentina…) y cualquier cambio en el motor de Asteroids.
 - Cambios de esquema, RLS o capa `lib/db`.
 - Autenticación real, anti-trampas y Realtime.
-- Seed de puntuaciones de ejemplo.
+- Seed de puntuaciones de otros juegos.
 - Tests automatizados.
 
 Cada uno, si llega, va en su propia spec.
