@@ -2,12 +2,10 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Leaderboard } from "@/components/leaderboard";
-import { GAMES, getGame, seededScores } from "@/lib/data";
-
-export function generateStaticParams() {
-  return GAMES.map((g) => ({ id: g.id }));
-}
-
+import { getGame } from "@/lib/db/games";
+import { getLeaderboard } from "@/lib/db/scores";
+import { formatPlays } from "@/lib/format";
+import { createClient } from "@/lib/supabase/server";
 export default function GameDetailPage({ params }: PageProps<"/games/[id]">) {
   return (
     <Suspense
@@ -21,14 +19,18 @@ export default function GameDetailPage({ params }: PageProps<"/games/[id]">) {
     </Suspense>
   );
 }
-
-async function GameDetail({ params }: { params: PageProps<"/games/[id]">["params"] }) {
+async function GameDetail({
+  params,
+}: {
+  params: PageProps<"/games/[id]">["params"];
+}) {
   const { id } = await params;
-  const game = getGame(id);
+  const supabase = await createClient();
+  const [game, scores] = await Promise.all([
+    getGame(supabase, id),
+    getLeaderboard(supabase, id, 10),
+  ]);
   if (!game) notFound();
-
-  const scores = seededScores(id.length * 17 + 3, 10);
-
   return (
     <div className="av-detail fade-in">
       <div>
@@ -47,11 +49,17 @@ async function GameDetail({ params }: { params: PageProps<"/games/[id]">["params
           <div className="stat-strip">
             <div>
               <div className="l">Partidas</div>
-              <div className="v">{game.plays}</div>
+              <div className="v">{formatPlays(game.plays)}</div>
             </div>
             <div>
               <div className="l">Mejor global</div>
-              <div className="v" style={{ color: "var(--magenta)", textShadow: "0 0 6px rgba(255,0,110,0.5)" }}>
+              <div
+                className="v"
+                style={{
+                  color: "var(--magenta)",
+                  textShadow: "0 0 6px rgba(255,0,110,0.5)",
+                }}
+              >
                 {game.best.toLocaleString("es-ES")}
               </div>
             </div>
@@ -59,7 +67,10 @@ async function GameDetail({ params }: { params: PageProps<"/games/[id]">["params
               <div className="l">Dificultad</div>
               <div
                 className="v"
-                style={{ color: "var(--yellow)", textShadow: "0 0 6px rgba(245,255,0,0.5)" }}
+                style={{
+                  color: "var(--yellow)",
+                  textShadow: "0 0 6px rgba(245,255,0,0.5)",
+                }}
                 role="img"
                 aria-label="Dificultad: 3 de 5"
               >
@@ -77,9 +88,8 @@ async function GameDetail({ params }: { params: PageProps<"/games/[id]">["params
           </div>
         </div>
       </div>
-
       <aside>
-        <Leaderboard rows={scores} />
+        <Leaderboard rows={scores} gameId={game.id} title={game.title} />
       </aside>
     </div>
   );

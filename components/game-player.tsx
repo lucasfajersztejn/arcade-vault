@@ -3,14 +3,15 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { AsteroidsCanvas, AsteroidsControls, type AsteroidsHandle } from "@/components/asteroids-canvas";
-import { saveScore } from "@/lib/scores";
+import { submitScore } from "@/lib/db/scores";
 import { useSession } from "@/lib/session";
+import { createClient } from "@/lib/supabase/client";
 import type { Game } from "@/lib/types";
 
 const LIVES = 3;
 const POINTS_PER_LEVEL = 2500;
 
-type SaveState = "idle" | "saved" | "error";
+type SaveState = "idle" | "saving" | "saved" | "error";
 
 export function GamePlayer({ game }: { game: Game }) {
   const { user } = useSession();
@@ -68,8 +69,11 @@ export function GamePlayer({ game }: { game: Game }) {
     setOver(true);
   };
 
-  const save = () => {
-    setSaveState(saveScore({ game: game.id, score, name: name.trim() || "INVITADO" }) ? "saved" : "error");
+  const save = async () => {
+    if (saveState === "saving") return;
+    setSaveState("saving");
+    const ok = await submitScore(createClient(), { gameId: game.id, playerName: name, score });
+    setSaveState(ok ? "saved" : "error");
   };
 
   // Mantiene el foco dentro del modal mientras está abierto.
@@ -190,13 +194,13 @@ export function GamePlayer({ game }: { game: Game }) {
                     aria-label="Tus iniciales"
                     autoFocus
                   />
-                  <button type="button" className="btn yellow" onClick={save}>
-                    GUARDAR PUNTUACIÓN
+                  <button type="button" className="btn yellow" onClick={save} disabled={saveState === "saving"}>
+                    {saveState === "saving" ? "GUARDANDO…" : "GUARDAR PUNTUACIÓN"}
                   </button>
                 </div>
                 {saveState === "error" && (
                   <div role="alert" style={{ marginTop: 10, color: "var(--magenta)", fontSize: 12 }}>
-                    No se pudo guardar. Revisa que el navegador permita guardar datos e inténtalo de nuevo.
+                    No se pudo guardar la puntuación. Comprueba tu conexión e inténtalo de nuevo.
                   </div>
                 )}
               </>

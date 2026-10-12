@@ -1,12 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { GamePlayer } from "@/components/game-player";
-import { GAMES, getGame } from "@/lib/data";
-
-export function generateStaticParams() {
-  return GAMES.map((g) => ({ id: g.id }));
-}
-
+import { getGame } from "@/lib/db/games";
+import { createClient } from "@/lib/supabase/server";
 export default function PlayPage({ params }: PageProps<"/games/[id]/jugar">) {
   return (
     <Suspense
@@ -20,10 +16,13 @@ export default function PlayPage({ params }: PageProps<"/games/[id]/jugar">) {
     </Suspense>
   );
 }
-
-async function Player({ params }: { params: PageProps<"/games/[id]/jugar">["params"] }) {
+async function Player({
+  params,
+}: {
+  params: PageProps<"/games/[id]/jugar">["params"];
+}) {
   const { id } = await params;
-  const game = getGame(id);
+  const game = await getGame(await createClient(), id);
   if (!game) notFound();
   return <GamePlayer game={game} />;
 }
