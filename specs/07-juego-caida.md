@@ -1,6 +1,6 @@
 # SPEC 07 — Convertir CAÍDA en un Tetris real
 
-**Estado:** Borrador
+**Estado:** Aprobado
 **Depende de:** SPEC 05 (`specs/05-juego-asteroids.md`) por el patrón de motor, canvas y `GamePlayer`; SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por las tablas `games`/`scores` y el leaderboard
 **Fecha:** 2026-10-12
 **Objetivo:** Convertir el juego simulado `caida` en un Tetris real, portado de `refereences/started-games/03-tetris` (7 piezas), con HUD, pausa, guardado de puntuación y leaderboard de la plataforma.
