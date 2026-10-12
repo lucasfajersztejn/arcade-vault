@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Leaderboard } from "@/components/leaderboard";
-import { seededScores } from "@/lib/data";
 import { getGame } from "@/lib/db/games";
+import { getLeaderboard } from "@/lib/db/scores";
 import { formatPlays } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 export default function GameDetailPage({ params }: PageProps<"/games/[id]">) {
@@ -25,9 +25,12 @@ async function GameDetail({
   params: PageProps<"/games/[id]">["params"];
 }) {
   const { id } = await params;
-  const game = await getGame(await createClient(), id);
+  const supabase = await createClient();
+  const [game, scores] = await Promise.all([
+    getGame(supabase, id),
+    getLeaderboard(supabase, id, 10),
+  ]);
   if (!game) notFound();
-  const scores = seededScores(id.length * 17 + 3, 10);
   return (
     <div className="av-detail fade-in">
       <div>
@@ -86,7 +89,7 @@ async function GameDetail({
         </div>
       </div>
       <aside>
-        <Leaderboard rows={scores} />
+        <Leaderboard rows={scores} gameId={game.id} title={game.title} />
       </aside>
     </div>
   );

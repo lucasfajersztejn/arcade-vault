@@ -1848,6 +1848,27 @@ a {
   color: var(--ink-dim);
   line-height: 1.6;
 }
+/* ===== ranking vacío / cargando ===== */
+.av-empty {
+  padding: 40px 20px;
+  text-align: center;
+}
+.av-empty .pixel {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--yellow);
+  text-shadow: 0 0 8px rgba(245, 255, 0, 0.4);
+}
+.av-empty p {
+  margin: 12px 0 24px;
+  color: var(--ink-dim);
+}
+.av-hall-loading {
+  display: flex;
+  justify-content: center;
+  padding: 64px 0;
+}
+
 /* ===== accesibilidad ===== */
 :focus-visible {
   outline: 2px solid var(--yellow);
