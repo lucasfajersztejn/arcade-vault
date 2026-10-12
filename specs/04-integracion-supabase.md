@@ -1,6 +1,6 @@
 # SPEC 04 — Integración base de Supabase en Next.js
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 03 (`specs/03-about-y-contacto-resend.md`, Implementado) por `.env.template` y la convención de variables de entorno
 **Fecha:** 2026-10-12
 **Objetivo:** Dejar Supabase integrado en la app Next.js (dependencias, variables de entorno, clientes de servidor y navegador con `@supabase/ssr`, y tipos de base de datos generados), sin migrar ningún dato ni funcionalidad existente.
