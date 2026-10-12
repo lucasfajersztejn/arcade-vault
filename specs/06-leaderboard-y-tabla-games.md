@@ -1,6 +1,6 @@
 # SPEC 06 — Tabla `games` y leaderboard real en Supabase
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 04 (`specs/04-integracion-supabase.md`, Implementado) por los clientes `lib/supabase/{server,client}.ts` y los tipos generados; SPEC 05 (`specs/05-juego-asteroids.md`, Implementado) por el catálogo de 9 juegos y el guardado de puntuación en `GamePlayer`; SPEC 01 (`specs/01-mvp-pantallas-visuales.md`, Implementado) por el Salón de la Fama y el ranking del detalle
 **Fecha:** 2026-10-12
 **Objetivo:** Mover el catálogo de juegos y las puntuaciones a las tablas `games` y `scores` de Supabase, y alimentar con ellas la biblioteca, el detalle de juego y el Salón de la Fama en lugar de los datos simulados y `av_scores`.
