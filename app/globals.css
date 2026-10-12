@@ -2248,7 +2248,7 @@ a {
 .contact-form textarea[aria-invalid="true"] {
   border-color: #ff6b6b;
 }
-.contact-form .btn:disabled {
+.btn:disabled {
   opacity: 0.6;
   cursor: progress;
 }

@@ -7,5 +7,5 @@ export default function GamesError({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
-  return <LoadError what="los juegos" error={error} retry={retry} />;
+  return <LoadError what="la información de los juegos" error={error} retry={retry} />;
 }

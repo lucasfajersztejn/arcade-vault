@@ -52,7 +52,7 @@ export async function getPlayerBest(
     date: data.achieved_at ? formatDate(data.achieved_at) : "",
   };
 }
-/** Inserta una puntuación; devuelve false si no se pudo guardar (mismo contrato que el antiguo `saveScore`). */
+/** Inserta una puntuación; devuelve false si no se pudo guardar. */
 export async function submitScore(
   supabase: Db,
   entry: { gameId: string; playerName: string; score: number },

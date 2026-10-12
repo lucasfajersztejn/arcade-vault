@@ -32,10 +32,3 @@ export interface ScoreRow {
 export interface SessionUser {
   name: string;
 }
-/** Persistido (array) en localStorage["av_scores"] */
-export interface SavedScore {
-  game: string;
-  score: number;
-  name: string;
-  at: number;
-}
