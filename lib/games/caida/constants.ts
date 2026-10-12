@@ -73,3 +73,5 @@ export const GHOST_ALPHA = 0.2;
 export const MAX_DT = 50;
 /** Tope de la columna `scores.score` en la BD. */
 export const MAX_SCORE = 99_999_999;
+/** Color de la rejilla del tablero (`--grid-line` del tema oscuro del original). */
+export const GRID_LINE = "#22222e";
