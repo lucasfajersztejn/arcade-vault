@@ -22,7 +22,7 @@ jobs:
       - name: Triage issue with Claude
         uses: anthropics/claude-code-action@v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          #claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }} //tiene commit para que no de error VSC
           claude_args: '--allowed-tools "Bash(gh issue *),Bash(gh label *),Read,Glob,Grep"'
           prompt: |
             Analiza el issue #${{ github.event.issue.number }} del repositorio ${{ github.repository }}.
