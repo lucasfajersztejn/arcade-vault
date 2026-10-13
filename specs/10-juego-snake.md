@@ -1,6 +1,6 @@
 # SPEC 10 — Añadir el juego Snake al catálogo
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 05 (`specs/05-juego-asteroids.md`) por el patrón de motor, canvas y `GamePlayer`; SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por las tablas `games`/`scores` y el leaderboard; SPEC 07 (`specs/07-juego-caida.md`) por el registro de motores `lib/games/registry.ts`
 **Fecha:** 2026-10-13
 **Objetivo:** Añadir el juego `snake`, creado desde cero con las frutas de `refereences/source-assets/snake-assets`, con HUD, pausa, guardado de puntuación y leaderboard de la plataforma.
@@ -207,9 +207,9 @@ Los pasos 1 y 2 no producen cambios, por lo que no llevan commit. Los nombres se
 
 ### Build y calidad
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `npm run lint` y `npm run build` terminan sin errores. *(Verificado con el código completo del paso 9.)*
 - [x] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración. Si salen avisos, anotar si son previos (los 2 de `public.rls_auto_enable()` ya existían en SPEC 07). _(Verificado tras `add_snake_game`: salen solo los 2 avisos de `public.rls_auto_enable()` que ya existían; ninguno nuevo.)_
-- [ ] `grep -r "service_role" app components lib` no devuelve resultados.
+- [x] `grep -r "service_role" app components lib` no devuelve resultados.
 
 ### Catálogo
 
@@ -217,51 +217,51 @@ Los pasos 1 y 2 no producen cambios, por lo que no llevan commit. Los nombres se
 - [x] `/games` muestra la tarjeta «SNAKE» con su portada `cover-snake`; los otros tres juegos siguen en su orden (`bloque-buster`, `caida`, `asteroids`). _(Verificado en el build de producción, con captura en `.playwright-screenshots/spec10-games-desktop.png`.)_
 - [x] El filtro ARCADE incluye SNAKE. _(Muestra ARKANOID y SNAKE.)_
 - [x] `/games/snake` muestra el detalle y «JUGAR AHORA» lleva a `/games/snake/jugar`. _(Verificado: título SNAKE, portada `cover-snake` y enlace a `/games/snake/jugar`.)_
-- [ ] Tras el seed, `scores` tiene 10 filas de `snake` (mejor marca 1 200, `GLITCHA`) y los demás juegos no cambian.
+- [x] Tras el seed, `scores` tiene 10 filas de `snake` (mejor marca 1 200, `GLITCHA`) y los demás juegos no cambian. *(Verificado: 10 filas del seed, mejor marca 1 200 de `GLITCHA`, y los demás juegos siguen con sus 33 filas. Además hay 1 fila real, `LUCAS` 300, que guardó el usuario antes del seed y se conserva; por eso `plays` es 11.)*
 
 ### Juego
 
-- [ ] `/games/snake/jugar` muestra el canvas 600×600 dentro del marco CRT, con la serpiente de 3 segmentos mirando a la derecha y una fruta del atlas en una celda libre.
-- [ ] Controles: `←` `↑` `→` `↓` y `W` `A` `S` `D` giran la serpiente; sin tecla sigue recto; girar 180° se ignora; dos giros rápidos entre pasos se aplican en pasos consecutivos y un tercero se descarta.
-- [ ] La serpiente avanza una celda por paso (`STEP_MS`): 140 ms en el nivel 1 y 5 ms menos por nivel, con mínimo de 70 ms.
-- [ ] Comer una fruta suma exactamente 10 puntos, crece 1 segmento y el HUD de la plataforma lo refleja al instante.
-- [ ] La fruta nueva aparece siempre en una celda libre (nunca bajo la serpiente) y su tipo es distinto del anterior.
-- [ ] Las frutas se dibujan con los sprites de `fruits.png` (fila pixel-art), sin suavizado y sin deformarse.
-- [ ] El nivel del HUD es `1 + floor(frutas / 5)`: pasa a 2 al comer la 5.ª fruta y la velocidad cambia en ese momento.
-- [ ] El HUD muestra Puntuación y Nivel con valores reales; la tarjeta «Vidas» no aparece.
-- [ ] Chocar con una pared o con el propio cuerpo abre «FIN DEL JUEGO» con la puntuación final correcta. Llenar las 400 celdas hace lo mismo (verificado con `page.evaluate`, sin añadir código al motor).
-- [ ] PAUSA (botón) y las teclas `P` y `Esc` congelan el juego (la serpiente no avanza) y REANUDAR o la tecla continúan sin saltos; el estado del botón se actualiza con la tecla; ocultar la pestaña o perder el foco pausa.
-- [ ] Pulsar FIN abre «FIN DEL JUEGO»; el canvas no muestra su propio game over, ni HUD, ni overlay de pausa, ni reinicia con tecla.
-- [ ] «JUGAR DE NUEVO» reinicia con 3 segmentos, a la derecha, puntuación 0 y nivel 1, sin duplicar el bucle (la velocidad no aumenta tras varios reinicios).
-- [ ] Escribir un nombre en el input del modal (incluidas barra espaciadora, flechas y `WASD`) no mueve la serpiente ni hace scroll.
-- [ ] Salir con SALIR o navegar a otra ruta no deja listeners ni bucles activos: las flechas y Espacio vuelven a hacer scroll en otras páginas; salir antes de que cargue `fruits.png` no arranca un bucle huérfano.
-- [ ] A ancho ≤ 768 px el canvas se escala sin scroll horizontal; en `(pointer: coarse)` aparece el aviso «requiere teclado».
-- [ ] La puntuación enviada es un entero entre 0 y 99 999 999 (máximo real 3 970).
-- [ ] `grep -r "Audio\|mousemove\|localStorage\|window.SPRITE_ATLAS" lib/games/snake components/snake-canvas.tsx` no devuelve resultados.
+- [x] `/games/snake/jugar` muestra el canvas 600×600 dentro del marco CRT, con la serpiente de 3 segmentos mirando a la derecha y una fruta del atlas en una celda libre. *(Verificado en `/games/snake/jugar` a 1440 px: canvas 600×600 dentro del marco CRT, 3 segmentos mirando a la derecha y una fruta en una celda libre.)*
+- [x] Controles: `←` `↑` `→` `↓` y `W` `A` `S` `D` giran la serpiente; sin tecla sigue recto; girar 180° se ignora; dos giros rápidos entre pasos se aplican en pasos consecutivos y un tercero se descarta. *(Verificado con teclado real: sin tecla sigue recto; `←` ignorado yendo a la derecha; `↑`, `A` y `S` giran; con `→` `↑` `←` seguidas se aplican `→` y `↑` en pasos consecutivos y `←` se descarta.)*
+- [x] La serpiente avanza una celda por paso (`STEP_MS`): 140 ms en el nivel 1 y 5 ms menos por nivel, con mínimo de 70 ms. *(Medido en el navegador: 143 ms de media en el nivel 1 (140 ms más un frame de 16 ms) y 129 a 138 ms en el nivel 2. El mínimo de 70 ms y la fórmula se verificaron con una prueba de `stepMsFor` en el paso 4.)*
+- [x] Comer una fruta suma exactamente 10 puntos, crece 1 segmento y el HUD de la plataforma lo refleja al instante. *(Verificado con un piloto automático que lee el canvas: 10, 20, 30, 40 y 50 puntos, +1 segmento por fruta y el HUD cambia en el mismo paso.)*
+- [x] La fruta nueva aparece siempre en una celda libre (nunca bajo la serpiente) y su tipo es distinto del anterior. *(Verificado con una prueba de `entities.ts`: 2 000 apariciones, siempre en celda libre y con tipo distinto del anterior. No se midió el tipo en el navegador.)*
+- [x] Las frutas se dibujan con los sprites de `fruits.png` (fila pixel-art), sin suavizado y sin deformarse. *(Verificado por captura con la zanahoria sobre su baldosa y la naranja en móvil: sin suavizado y con la proporción conservada. No se revisaron las 22 frutas una a una.)*
+- [x] El nivel del HUD es `1 + floor(frutas / 5)`: pasa a 2 al comer la 5.ª fruta y la velocidad cambia en ese momento. *(Verificado: el HUD pasa a `02` al llegar a 50 puntos y los pasos siguientes salen a unos 135 ms.)*
+- [x] El HUD muestra Puntuación y Nivel con valores reales; la tarjeta «Vidas» no aparece. *(Verificado: Jugador, Puntuación y Nivel; sin «Vidas».)*
+- [x] Chocar con una pared o con el propio cuerpo abre «FIN DEL JUEGO» con la puntuación final correcta. Llenar las 400 celdas hace lo mismo (verificado con `page.evaluate`, sin añadir código al motor). *(Pared verificada en el navegador: modal con la puntuación final. Choque con el cuerpo, solo con la prueba de `entities.ts` del paso 4. Tablero lleno, con una simulación del motor en Node y no con `page.evaluate`: un bot sigue un ciclo hamiltoniano hasta las 400 celdas y el motor llama una vez a `onGameOver` con 3 970 puntos y nivel 80.)*
+- [x] PAUSA (botón) y las teclas `P` y `Esc` congelan el juego (la serpiente no avanza) y REANUDAR o la tecla continúan sin saltos; el estado del botón se actualiza con la tecla; ocultar la pestaña o perder el foco pausa. *(Verificado: `P`, `Esc`, `blur` y pestaña oculta (simulada con `document.hidden` y `visibilitychange`) pausan y el botón pasa a REANUDAR; una flecha pulsada en pausa se ignora y la serpiente sigue sin saltos al reanudar (`10,10 → 13,10`).)*
+- [x] Pulsar FIN abre «FIN DEL JUEGO»; el canvas no muestra su propio game over, ni HUD, ni overlay de pausa, ni reinicia con tecla. *(Verificado: FIN abre el modal con 0 puntos; el canvas no pinta game over ni HUD, y tras el fin de partida el motor deja de capturar teclas.)*
+- [x] «JUGAR DE NUEVO» reinicia con 3 segmentos, a la derecha, puntuación 0 y nivel 1, sin duplicar el bucle (la velocidad no aumenta tras varios reinicios). *(Verificado con 3 reinicios seguidos: el paso medio es 143 ms en los tres, sin aceleración.)*
+- [x] Escribir un nombre en el input del modal (incluidas barra espaciadora, flechas y `WASD`) no mueve la serpiente ni hace scroll. *(Verificado: se escribe «A S D W » en el input, con `←`, `↓` y `Espacio`; no hay scroll y esas teclas no se cancelan con `preventDefault`.)*
+- [x] Salir con SALIR o navegar a otra ruta no deja listeners ni bucles activos: las flechas y Espacio vuelven a hacer scroll en otras páginas; salir antes de que cargue `fruits.png` no arranca un bucle huérfano. *(Verificado: al pulsar SALIR, `↑ ↓ ← → W` dejan de capturarse. Salir antes de que cargue `fruits.png`, solo con la simulación del motor del paso 5.)*
+- [x] A ancho ≤ 768 px el canvas se escala sin scroll horizontal; en `(pointer: coarse)` aparece el aviso «requiere teclado». *(Verificado a 390 px con puntero táctil emulado (`isMobile`): sin scroll horizontal en `/games`, `/games/snake` y `/jugar`, canvas de 310×310 y aviso visible.)*
+- [x] La puntuación enviada es un entero entre 0 y 99 999 999 (máximo real 3 970). *(Máximo real 3 970 en la simulación; el motor acota con `MAX_SCORE`. Guardadas 30 y 20.)*
+- [x] `grep -r "Audio\|mousemove\|localStorage\|window.SPRITE_ATLAS" lib/games/snake components/snake-canvas.tsx` no devuelve resultados.
 
 ### Leaderboard
 
-- [ ] «GUARDAR PUNTUACIÓN» crea una fila en `scores` con `game_id = 'snake'`, el nombre escrito (o `INVITADO`) y la puntuación final.
-- [ ] Sin puntuaciones (antes del seed), `/games/snake` muestra «Sé el primero en puntuar»; tras guardar una, aparece en el ranking al recargar.
-- [ ] Tras el seed, `/games/snake` muestra el top 10 con `GLITCHA` (1 200) en primer lugar.
-- [ ] Hay una pestaña «SNAKE» en `/salon` con podio y tabla coherentes con la vista `leaderboard`.
-- [ ] Con sesión iniciada, «TU MEJOR MARCA EN SNAKE» muestra la marca y el rango reales.
-- [ ] `plays` y «Mejor global» de `/games/snake` coinciden con `count(*)` y `max(score)` de `scores`.
+- [x] «GUARDAR PUNTUACIÓN» crea una fila en `scores` con `game_id = 'snake'`, el nombre escrito (o `INVITADO`) y la puntuación final. *(Verificado con dos partidas: una con el nombre `PRUEBA10` (30 puntos) y otra con el input vacío, que guardó `INVITADO` (20 puntos). Las dos filas de prueba se borraron después por `id` y nombre.)*
+- [ ] Sin puntuaciones (antes del seed), `/games/snake` muestra «Sé el primero en puntuar»; tras guardar una, aparece en el ranking al recargar. *(Sin marcar: no se pudo ver el ranking vacío, porque `LUCAS` (300) ya había guardado una partida antes de las pruebas y no se borra. Sí se verificó que las partidas guardadas aparecen en el ranking al recargar.)*
+- [x] Tras el seed, `/games/snake` muestra el top 10 con `GLITCHA` (1 200) en primer lugar.
+- [x] Hay una pestaña «SNAKE» en `/salon` con podio y tabla coherentes con la vista `leaderboard`. *(Verificado con las 11 filas: podio con GLITCHA, PX_KAI y NEONFOX, y tabla hasta `#11 SCANLINE`.)*
+- [x] Con sesión iniciada, «TU MEJOR MARCA EN SNAKE» muestra la marca y el rango reales. *(Verificado con la sesión `LUCAS`: «#08 LUCAS 300».)*
+- [x] `plays` y «Mejor global» de `/games/snake` coinciden con `count(*)` y `max(score)` de `scores`. *(Verificado: 11 y 1 200 en la web, igual que `count(*)` y `max(score)`.)*
 
 ### Sin regresiones
 
-- [ ] `/games/asteroids/jugar`, `/games/caida/jugar` y `/games/bloque-buster/jugar` funcionan como antes.
-- [ ] `git diff` no toca `components/game-player.tsx`, `lib/games/asteroids/`, `lib/games/caida/`, `lib/games/bloque-buster/` ni sus componentes canvas.
-- [ ] `git status` no muestra cambios en `refereences/`.
-- [ ] `lib/db/`, `app/salon/` y `components/leaderboard.tsx` no cambian.
-- [ ] La sesión `av_user` sigue funcionando.
+- [x] `/games/asteroids/jugar`, `/games/caida/jugar` y `/games/bloque-buster/jugar` funcionan como antes. *(Verificado jugando: `asteroids` con 3 vidas y puntos al disparar, `caida` sin «Vidas» y `bloque-buster` con 3 vidas; FIN abre el modal en los tres y no hay errores de página.)*
+- [x] `git diff` no toca `components/game-player.tsx`, `lib/games/asteroids/`, `lib/games/caida/`, `lib/games/bloque-buster/` ni sus componentes canvas.
+- [x] `git status` no muestra cambios en `refereences/`.
+- [x] `lib/db/`, `app/salon/` y `components/leaderboard.tsx` no cambian.
+- [x] La sesión `av_user` sigue funcionando. *(Verificado: la sesión `av_user` hace que salga «TU MEJOR MARCA».)*
 
 ### Proceso
 
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la portada, el tablero, la serpiente y la leyenda, y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
-- [ ] Se leyó la documentación local de Next 16.4 antes de escribir código.
-- [ ] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px).
-- [ ] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la portada, el tablero, la serpiente y la leyenda, y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado). *(Aplicados en la portada, el tablero, la serpiente y la leyenda. Dos detalles de implementación no estaban en la spec: la baldosa oscura bajo la fruta y el 1:1 de la pantalla a ≤ 768 px.)*
+- [x] Se leyó la documentación local de Next 16.4 antes de escribir código.
+- [x] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px). *(Escritorio y 390 px del juego; las demás pantallas, solo en escritorio.)*
+- [x] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación.
 
 ### Verificación manual recomendada (paso final)
 
