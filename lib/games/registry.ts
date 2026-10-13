@@ -34,7 +34,7 @@ export type EngineEntry = {
   hasLives: boolean;
   ariaLabel: string;
 };
-/** Juegos con motor real, por `id`. Los que no están aquí siguen con la simulación de `GamePlayer`. */
+/** Juegos con motor real, por `id`. Un juego del catálogo que no esté aquí no es jugable: `GamePlayer` muestra «JUEGO NO DISPONIBLE». */
 export const ENGINES: Record<string, EngineEntry> = {
   asteroids: {
     Canvas: AsteroidsCanvas,
