@@ -208,15 +208,15 @@ Los pasos 1 y 2 no producen cambios, por lo que no llevan commit. Los nombres se
 ### Build y calidad
 
 - [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración. Si salen avisos, anotar si son previos (los 2 de `public.rls_auto_enable()` ya existían en SPEC 07).
+- [x] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración. Si salen avisos, anotar si son previos (los 2 de `public.rls_auto_enable()` ya existían en SPEC 07). _(Verificado tras `add_snake_game`: salen solo los 2 avisos de `public.rls_auto_enable()` que ya existían; ninguno nuevo.)_
 - [ ] `grep -r "service_role" app components lib` no devuelve resultados.
 
 ### Catálogo
 
-- [ ] `select id, title, cat, cover, color, sort_order from games where id = 'snake'` devuelve `SNAKE`, `ARCADE`, `cover-snake`, `green`, `4`.
-- [ ] `/games` muestra la tarjeta «SNAKE» con su portada `cover-snake`; los otros tres juegos siguen en su orden (`bloque-buster`, `caida`, `asteroids`).
-- [ ] El filtro ARCADE incluye SNAKE.
-- [ ] `/games/snake` muestra el detalle y «JUGAR AHORA» lleva a `/games/snake/jugar`.
+- [x] `select id, title, cat, cover, color, sort_order from games where id = 'snake'` devuelve `SNAKE`, `ARCADE`, `cover-snake`, `green`, `4`.
+- [x] `/games` muestra la tarjeta «SNAKE» con su portada `cover-snake`; los otros tres juegos siguen en su orden (`bloque-buster`, `caida`, `asteroids`). _(Verificado en el build de producción, con captura en `.playwright-screenshots/spec10-games-desktop.png`.)_
+- [x] El filtro ARCADE incluye SNAKE. _(Muestra ARKANOID y SNAKE.)_
+- [x] `/games/snake` muestra el detalle y «JUGAR AHORA» lleva a `/games/snake/jugar`. _(Verificado: título SNAKE, portada `cover-snake` y enlace a `/games/snake/jugar`.)_
 - [ ] Tras el seed, `scores` tiene 10 filas de `snake` (mejor marca 1 200, `GLITCHA`) y los demás juegos no cambian.
 
 ### Juego
