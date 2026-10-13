@@ -37,14 +37,6 @@ values (
 - Sin seed de puntuaciones, salvo que el usuario lo pida. Si lo pide, que sean ficticias y se identifiquen como tales en la migración.
 - Tras la migración: `get_advisors` (seguridad). No debe haber avisos nuevos. Regenerar `lib/supabase/database.types.ts` con `generate_typescript_types` solo si cambió el esquema (insertar una fila no lo cambia).
 
-### Conversión de un juego simulado
-
-Si el juego reemplaza a uno existente (`caida`, `bloque-buster`, `serpentina`…):
-
-- Se conserva su `id`, su portada y sus `scores`. No hay migración de catálogo salvo cambios de texto.
-- Si los `scores` previos eran del simulado (puntuaciones sin sentido para el juego real), decidir y anotar en la spec si se limpian con una migración (`delete from scores where game_id = '…'`).
-- El motor se registra en el registro de motores con el `id` existente.
-
 ## Portada
 
 Clase `cover-<id>` en `app/globals.css`, siguiendo `.cover-asteroids` y las demás (`.cover-bg` + pseudoelementos, solo CSS, sin imágenes). Diseñarla con `/frontend-design` y `/ui-ux-pro-max`. La clase se guarda en `games.cover` como texto.

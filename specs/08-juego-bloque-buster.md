@@ -1,6 +1,6 @@
 # SPEC 08 — Convertir BLOQUE BUSTER en un Arkanoid real
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 05 (`specs/05-juego-asteroids.md`) por el patrón de motor, canvas y `GamePlayer`; SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por las tablas `games`/`scores` y el leaderboard; SPEC 07 (`specs/07-juego-caida.md`) por el registro de motores `lib/games/registry.ts`
 **Fecha:** 2026-10-13
 **Objetivo:** Convertir el juego simulado `bloque-buster` en un Arkanoid real, portado de `refereences/started-games/04-arkanoid` (5 niveles, 3 vidas), con HUD, pausa, guardado de puntuación y leaderboard de la plataforma.
@@ -204,64 +204,64 @@ Los pasos 1 y 2 (lectura de documentación y skills) no producen cambios, por lo
 
 ### Build y calidad
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración. Si salen avisos, anotar si son previos (los 2 de `public.rls_auto_enable()` ya existían en SPEC 07).
-- [ ] `grep -r "service_role" app components lib` no devuelve resultados.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración. Si salen avisos, anotar si son previos (los 2 de `public.rls_auto_enable()` ya existían en SPEC 07). *(Verificado: salen los 2 avisos de `public.rls_auto_enable()` que ya existían en SPEC 07; no hay ninguno nuevo.)*
+- [x] `grep -r "service_role" app components lib` no devuelve resultados.
 
 ### Catálogo (conversión de `bloque-buster`)
 
-- [ ] `select id, title, cat, cover, color, sort_order from games where id = 'bloque-buster'` devuelve la misma fila que antes (`ARCADE`, `cover-bricks`, `cyan`, `sort_order` 1).
-- [ ] `/games` muestra las mismas 9 tarjetas en el mismo orden; «BLOQUE BUSTER» conserva su portada `cover-bricks`.
-- [ ] El filtro ARCADE sigue incluyendo BLOQUE BUSTER.
-- [ ] `/games/bloque-buster` muestra el detalle y «JUGAR AHORA» lleva a `/games/bloque-buster/jugar`.
-- [ ] `select count(*) from scores where game_id = 'bloque-buster'` devuelve 0 tras la primera migración, y `scores` de los demás juegos no cambian.
-- [ ] Tras el seed, `scores` tiene 10 filas de `bloque-buster` (mejor marca 1 840, `PX_KAI`) y los demás juegos no cambian.
+- [x] `select id, title, cat, cover, color, sort_order from games where id = 'bloque-buster'` devuelve la misma fila que antes (`ARCADE`, `cover-bricks`, `cyan`, `sort_order` 1).
+- [x] `/games` muestra las mismas 9 tarjetas en el mismo orden; «BLOQUE BUSTER» conserva su portada `cover-bricks`.
+- [x] El filtro ARCADE sigue incluyendo BLOQUE BUSTER.
+- [x] `/games/bloque-buster` muestra el detalle y «JUGAR AHORA» lleva a `/games/bloque-buster/jugar`.
+- [x] `select count(*) from scores where game_id = 'bloque-buster'` devuelve 0 tras la primera migración, y `scores` de los demás juegos no cambian.
+- [x] Tras el seed, `scores` tiene 10 filas de `bloque-buster` (mejor marca 1 840, `PX_KAI`) y los demás juegos no cambian.
 
 ### Juego
 
-- [ ] `/games/bloque-buster/jugar` muestra el canvas 800×600 dentro del marco CRT; no aparecen la arena simulada ni el `setInterval` de puntuación.
-- [ ] El nivel 1 muestra 60 bloques en 6 filas con los colores `red, yellow, cyan, magenta, hotpink, green`; los niveles 2 a 5 muestran 40, 30, 39 y 39 bloques con las formas de `levels.js`.
-- [ ] Controles: `←` y `→` mueven la pala a 400 px/s sin salir del canvas; sin tecla, la pala no se mueve; el ratón no la mueve.
-- [ ] Al iniciar, la pala está centrada y la bola sobre ella sale con `vx = 200`, `vy = -300` (nivel 1).
-- [ ] La bola rebota en las paredes izquierda, derecha y techo, y en la pala siempre hacia arriba, sin cambiar `vx` según el punto de impacto.
-- [ ] Romper un bloque suma exactamente 10 puntos, invierte `vy`, dibuja la explosión de 4 frames durante 150 ms y el HUD de la plataforma lo refleja al instante. Dos bloques no se rompen en el mismo frame.
-- [ ] Al vaciar los bloques de un nivel del 1 al 4 se carga el siguiente: nivel del HUD +1, bola sobre la pala con la `speed` del nuevo nivel (1.10, 1.21, 1.33, 1.46), puntuación y vidas conservadas.
-- [ ] Si la bola cae por abajo, las vidas bajan en 1 y el HUD lo muestra; la bola vuelve sobre la pala con la velocidad del nivel actual; los bloques rotos siguen rotos.
-- [ ] El HUD muestra Puntuación, Vidas (3 al empezar) y Nivel (1 a 5) con valores reales; «Vidas» está visible.
-- [ ] PAUSA (botón) y las teclas `P` y `Esc` congelan el juego (bola, pala y explosiones no se mueven) y REANUDAR o la tecla continúan sin saltos; el estado del botón se actualiza con la tecla; ocultar la pestaña o perder el foco pausa.
-- [ ] El game over llega con 0 vidas, al vaciar el nivel 5 o al pulsar FIN, y abre «FIN DEL JUEGO» con la puntuación final correcta; el canvas no muestra GAME OVER ni «¡Completaste el juego!», ni reinicia con tecla.
-- [ ] El canvas no pinta HUD (Score, Nivel, bolas de vida) ni overlay de pausa ni botones «Saltar al nivel».
-- [ ] «JUGAR DE NUEVO» reinicia en nivel 1, 3 vidas, puntuación 0 y bloques completos, sin duplicar el bucle (la velocidad de la bola no aumenta tras varios reinicios).
-- [ ] Escribir un nombre en el input del modal (incluidas barra espaciadora y flechas) no mueve la pala ni hace scroll.
-- [ ] Salir con SALIR o navegar a otra ruta no deja listeners ni bucles activos: las flechas vuelven a hacer scroll en otras páginas; salir antes de que cargue el spritesheet no arranca un bucle huérfano.
-- [ ] A ancho ≤ 768 px el canvas se escala sin scroll horizontal; en `(pointer: coarse)` aparece el aviso «requiere teclado».
-- [ ] La puntuación enviada es un entero entre 0 y 99 999 999 (máximo real 2 080).
-- [ ] `grep -r "Audio\|mousemove\|localStorage" lib/games/bloque-buster components/bloque-buster-canvas.tsx` no devuelve resultados.
+- [x] `/games/bloque-buster/jugar` muestra el canvas 800×600 dentro del marco CRT; no aparecen la arena simulada ni el `setInterval` de puntuación.
+- [x] El nivel 1 muestra 60 bloques en 6 filas con los colores `red, yellow, cyan, magenta, hotpink, green`; los niveles 2 a 5 muestran 40, 30, 39 y 39 bloques con las formas de `levels.js`.
+- [x] Controles: `←` y `→` mueven la pala a 400 px/s sin salir del canvas; sin tecla, la pala no se mueve; el ratón no la mueve.
+- [x] Al iniciar, la pala está centrada y la bola sobre ella sale con `vx = 200`, `vy = -300` (nivel 1). *(Verificado por constantes y por simulación del motor, no medido en el navegador.)*
+- [x] La bola rebota en las paredes izquierda, derecha y techo, y en la pala siempre hacia arriba, sin cambiar `vx` según el punto de impacto. *(Verificado por simulación del motor: un autojugador sostiene la bola con la pala y las paredes durante la partida completa.)*
+- [x] Romper un bloque suma exactamente 10 puntos, invierte `vy`, dibuja la explosión de 4 frames durante 150 ms y el HUD de la plataforma lo refleja al instante. Dos bloques no se rompen en el mismo frame. *(Puntos, `vy` y un bloque por frame verificados con la simulación; los 4 frames y los 150 ms, solo por código.)*
+- [x] Al vaciar los bloques de un nivel del 1 al 4 se carga el siguiente: nivel del HUD +1, bola sobre la pala con la `speed` del nuevo nivel (1.10, 1.21, 1.33, 1.46), puntuación y vidas conservadas. *(Verificado por simulación: cambios de nivel con 600, 1 000, 1 300 y 1 690 puntos.)*
+- [x] Si la bola cae por abajo, las vidas bajan en 1 y el HUD lo muestra; la bola vuelve sobre la pala con la velocidad del nivel actual; los bloques rotos siguen rotos.
+- [x] El HUD muestra Puntuación, Vidas (3 al empezar) y Nivel (1 a 5) con valores reales; «Vidas» está visible.
+- [x] PAUSA (botón) y las teclas `P` y `Esc` congelan el juego (bola, pala y explosiones no se mueven) y REANUDAR o la tecla continúan sin saltos; el estado del botón se actualiza con la tecla; ocultar la pestaña o perder el foco pausa.
+- [x] El game over llega con 0 vidas, al vaciar el nivel 5 o al pulsar FIN, y abre «FIN DEL JUEGO» con la puntuación final correcta; el canvas no muestra GAME OVER ni «¡Completaste el juego!», ni reinicia con tecla.
+- [x] El canvas no pinta HUD (Score, Nivel, bolas de vida) ni overlay de pausa ni botones «Saltar al nivel».
+- [x] «JUGAR DE NUEVO» reinicia en nivel 1, 3 vidas, puntuación 0 y bloques completos, sin duplicar el bucle (la velocidad de la bola no aumenta tras varios reinicios).
+- [x] Escribir un nombre en el input del modal (incluidas barra espaciadora y flechas) no mueve la pala ni hace scroll.
+- [x] Salir con SALIR o navegar a otra ruta no deja listeners ni bucles activos: las flechas vuelven a hacer scroll en otras páginas; salir antes de que cargue el spritesheet no arranca un bucle huérfano. *(Salir de `/jugar` con la partida en curso deja de capturar `←`, `→` y `Esc`. Salir antes de que cargue el spritesheet, solo por código.)*
+- [x] A ancho ≤ 768 px el canvas se escala sin scroll horizontal; en `(pointer: coarse)` aparece el aviso «requiere teclado». *(Verificado a 390 px: sin scroll horizontal y canvas a 310 px. El aviso se comprobó con un contexto táctil emulado, `(pointer: coarse)` = true, sin dispositivo físico.)*
+- [x] La puntuación enviada es un entero entre 0 y 99 999 999 (máximo real 2 080).
+- [x] `grep -r "Audio\|mousemove\|localStorage" lib/games/bloque-buster components/bloque-buster-canvas.tsx` no devuelve resultados.
 
 ### Leaderboard
 
-- [ ] «GUARDAR PUNTUACIÓN» crea una fila en `scores` con `game_id = 'bloque-buster'`, el nombre escrito (o `INVITADO`) y la puntuación final.
-- [ ] Sin puntuaciones (antes del seed), `/games/bloque-buster` muestra «Sé el primero en puntuar»; tras guardar una, aparece en el ranking al recargar.
-- [ ] Tras el seed, `/games/bloque-buster` muestra el top 10 con `PX_KAI` (1 840) en primer lugar y `/salon` muestra podio y tabla de BLOQUE BUSTER.
-- [ ] Hay una pestaña «BLOQUE BUSTER» en `/salon` con podio y tabla coherentes con la vista `leaderboard`.
-- [ ] Con sesión iniciada, «TU MEJOR MARCA EN BLOQUE BUSTER» muestra la marca y el rango reales.
-- [ ] `plays` y «Mejor global» de `/games/bloque-buster` coinciden con `count(*)` y `max(score)` de `scores`.
+- [x] «GUARDAR PUNTUACIÓN» crea una fila en `scores` con `game_id = 'bloque-buster'`, el nombre escrito (o `INVITADO`) y la puntuación final.
+- [x] Sin puntuaciones (antes del seed), `/games/bloque-buster` muestra «Sé el primero en puntuar»; tras guardar una, aparece en el ranking al recargar.
+- [x] Tras el seed, `/games/bloque-buster` muestra el top 10 con `PX_KAI` (1 840) en primer lugar y `/salon` muestra podio y tabla de BLOQUE BUSTER.
+- [x] Hay una pestaña «BLOQUE BUSTER» en `/salon` con podio y tabla coherentes con la vista `leaderboard`.
+- [x] Con sesión iniciada, «TU MEJOR MARCA EN BLOQUE BUSTER» muestra la marca y el rango reales.
+- [x] `plays` y «Mejor global» de `/games/bloque-buster` coinciden con `count(*)` y `max(score)` de `scores`.
 
 ### Sin regresiones
 
-- [ ] `/games/asteroids/jugar` y `/games/caida/jugar` funcionan como antes.
-- [ ] Un simulado (`/games/rocas/jugar`, `/games/serpentina/jugar`) conserva la puntuación que sube sola y las vidas = 3.
-- [ ] `git diff` no toca `components/game-player.tsx`, `lib/games/asteroids/`, `lib/games/caida/`, `components/asteroids-canvas.tsx` ni `components/caida-canvas.tsx`.
-- [ ] `git status` no muestra cambios en `refereences/`.
-- [ ] `lib/db/`, `app/salon/` y `components/leaderboard.tsx` no cambian.
-- [ ] La sesión `av_user` sigue funcionando.
+- [x] `/games/asteroids/jugar` y `/games/caida/jugar` funcionan como antes. *(Verificado jugando: `asteroids` con 3 vidas, nivel 01, puntos al disparar, pausa y FIN; `caida` sin «Vidas», soft y hard drop, `P` y FIN.)*
+- [x] Un simulado (`/games/rocas/jugar`, `/games/serpentina/jugar`) conserva la puntuación que sube sola y las vidas = 3. *(Verificado: `rocas` y `serpentina` suben la puntuación solas (0 a 615 y 0 a 780 en 3 s), con 3 vidas, sin canvas y con la arena simulada.)*
+- [x] `git diff` no toca `components/game-player.tsx`, `lib/games/asteroids/`, `lib/games/caida/`, `components/asteroids-canvas.tsx` ni `components/caida-canvas.tsx`.
+- [x] `git status` no muestra cambios en `refereences/`.
+- [x] `lib/db/`, `app/salon/` y `components/leaderboard.tsx` no cambian.
+- [x] La sesión `av_user` sigue funcionando.
 
 ### Proceso
 
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la integración en el marco CRT, la leyenda y el aviso de teclado, y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
-- [ ] Se leyó la documentación local de Next 16.4 antes de escribir código.
-- [ ] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px).
-- [ ] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para la integración en el marco CRT, la leyenda y el aviso de teclado, y sus recomendaciones quedaron aplicadas (o descartadas con motivo anotado).
+- [x] Se leyó la documentación local de Next 16.4 antes de escribir código.
+- [x] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px). *(El juego se capturó también a 390 px; las demás pantallas, solo en escritorio.)*
+- [x] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación.
 
 ### Verificación manual recomendada (paso final)
 

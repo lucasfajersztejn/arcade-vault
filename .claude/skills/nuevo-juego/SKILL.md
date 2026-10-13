@@ -22,7 +22,7 @@ Responde en el idioma del prompt (normalmente español). Si `$ARGUMENTS` viene v
 
 1. Lee `CLAUDE.md`, la skill `/spec` (`~/.agents/skills/spec/SKILL.md` y su `template.md`, de donde sale el flujo y la estructura de toda spec), `specs/05-juego-asteroids.md`, `specs/06-leaderboard-y-tabla-games.md` y las dos specs más recientes. Lista `specs/` para calcular el siguiente número.
 2. Lista `refereences/started-games/`. Si el argumento coincide con una carpeta, lee su `game.js`, `index.html`, `README.md`/`CLAUDE.md` y sus assets. Anota: constantes y fórmulas, controles, estado (puntos, vidas, nivel, líneas…), bucle, dependencias de globales/DOM y assets (imágenes, sonidos).
-3. Consulta el catálogo real: `execute_sql` con `select id, title, cat, cover, color, sort_order from public.games order by sort_order;`. Así sabes qué `id` están ocupados, el siguiente `sort_order` y qué juego simulado podría convertirse.
+3. Consulta el catálogo real: `execute_sql` con `select id, title, cat, cover, color, sort_order from public.games order by sort_order;`. Así sabes qué `id` están ocupados y el siguiente `sort_order`.
 4. Mira cómo integra `components/game-player.tsx` los motores: si existe un registro de motores (`lib/games/registry.ts` o similar) o si todavía ramifica por `game.id === "asteroids"`. Esto decide si la spec debe incluir el paso de generalizar `GamePlayer`.
 
 ## Fase 2 — Preguntas
@@ -30,7 +30,7 @@ Responde en el idioma del prompt (normalmente español). Si `$ARGUMENTS` viene v
 Haz las preguntas en bloques de 3 a 5, numeradas, concretas y con una recomendación. Espera respuesta antes de seguir. Cubre siempre:
 
 1. **Origen.** ¿Se porta la referencia tal cual (constantes y fórmulas intactas, como en SPEC 05) o se diseña desde cero? Si es desde cero, pide las mecánicas mínimas.
-2. **Catálogo.** ¿Juego **nuevo** (fila nueva en `games`, como `asteroids` junto a `rocas`) o **conversión de un simulado** existente (conserva `id`, portada y puntuaciones)? Si es nuevo: `id` (slug), `title`, `short`, `long`, `cat`, `color`, `sort_order` y portada `cover-<id>`.
+2. **Catálogo.** Todo juego es una fila nueva en `games` con su propio motor. Pide `id` (slug), `title`, `short`, `long`, `cat`, `color`, `sort_order` y portada `cover-<id>`.
 3. **HUD.** Cómo se mapea el estado del juego a Puntuación / Vidas / Nivel. Si no hay vidas (p. ej. Tetris), ¿se muestra «—» o se oculta? ¿Qué cuenta como nivel?
 4. **Controles.** Teclas, cuáles se capturan con `preventDefault`, y si hace falta el aviso «requiere teclado».
 5. **Assets.** Sprites o sonidos de la referencia. Si se usan, van a `public/games/<id>/`. El sonido queda fuera salvo que el usuario lo pida.

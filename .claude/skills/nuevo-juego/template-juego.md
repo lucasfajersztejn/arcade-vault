@@ -18,7 +18,7 @@ Antes de rellenar, lee `reference/contrato-motor.md`, `reference/integracion-pla
 
 ## Por qué existe esta spec
 
-{{Qué juego es, de dónde viene y qué lo distingue. Si convierte un simulado, di cuál y por qué.}}
+{{Qué juego es, de dónde viene y qué lo distingue.}}
 
 ---
 
@@ -31,7 +31,7 @@ Antes de rellenar, lee `reference/contrato-motor.md`, `reference/integracion-pla
 - Componente cliente `components/{{id}}-canvas.tsx` con limpieza al desmontar (Strict Mode).
 - {{Si no existe registro de motores: crear `lib/games/registry.ts` y mover `asteroids` a él sin tocar su motor.}}
 - Integración en `GamePlayer`: HUD real ({{hud}}), PAUSA real y automática, FIN, modal «FIN DEL JUEGO» y guardado en `scores`.
-- {{Juego nuevo: fila en `games` con una migración (`apply_migration`) y portada `cover-{{id}}`en`app/globals.css`. | Conversión: se conserva el `id` `{{id}}` y su portada.}}
+- Fila en `games` con una migración (`apply_migration`) y portada `cover-{{id}}` en `app/globals.css`.
 - Controles de teclado: {{controles}}. Aviso «requiere teclado» en `(pointer: coarse)`.
 - Diseño: **usar SIEMPRE y obligatoriamente `/frontend-design` y `/ui-ux-pro-max`** (CLAUDE.md) para la portada, la integración en el marco CRT y cualquier UI nueva. No se escribe ni modifica UI sin haberlos invocado antes.
 - Revisión de la documentación local de Next 16.4 (`node_modules/next/dist/docs/`) antes de escribir código.
@@ -104,8 +104,8 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 5. **Motor:** `create{{Juego}}` con input, `update`/`draw`, bucle con `dt` ≤ 50 ms, callbacks, pausa automática y `destroy`.
 6. **Componente canvas** y estilos (escalado por CSS dentro de `.crt-screen`, leyenda de controles).
 7. {{**Registro de motores:** crearlo y mover `asteroids` sin cambiar su motor.}}
-8. **Catálogo:** {{migración con la fila de `games` y `cover-{{id}}`| portada ya existente}}. Comprobar con`list_tables`y`get_advisors`.
-9. **Integración en `GamePlayer`** mediante el registro; el resto de juegos conserva la simulación.
+8. **Catálogo:** migración con la fila de `games` y `cover-{{id}}`. Comprobar con `list_tables` y `get_advisors`.
+9. **Integración en `GamePlayer`** mediante el registro; los demás motores no cambian.
 10. {{Pasos propios del juego, de a ≤ 50 líneas.}}
 
 La verificación va en los criterios de aceptación, no en un paso del plan.
@@ -121,7 +121,7 @@ La verificación va en los criterios de aceptación, no en un paso del plan.
 ## Decisiones tomadas y descartadas
 
 - **{{Origen}}:** {{portar literal | diseñar desde cero}}. _Descartado:_ {{…}}.
-- **{{Catálogo}}:** {{juego nuevo | conversión de `{{id}}`}}. _Descartado:_ {{…}}.
+- **Catálogo: juego nuevo `{{id}}`.** _Descartado:_ {{…}}.
 - **HUD de la plataforma, no del canvas.** _Descartado:_ HUD en canvas (duplicado).
 - **Fin de partida por el modal de la plataforma.** _Descartado:_ overlay y reinicio con tecla del original.
 - **Solo teclado.** _Descartado:_ controles táctiles (spec propia).
@@ -136,7 +136,7 @@ La verificación va en los criterios de aceptación, no en un paso del plan.
 | Doble montaje de React Strict Mode duplica bucle y listeners           | `destroy()` idempotente y devuelto siempre por el `useEffect`; criterio de reinicios y desmontaje |
 | `preventDefault` rompe el input del modal o el scroll de otras páginas | Capturar solo con el motor activo y el foco fuera de un `input`; `destroy()` quita los listeners  |
 | `dt` enorme tras volver de una pestaña oculta                          | Pausa automática y `dt` ≤ 50 ms                                                                   |
-| Regresión en los juegos existentes al generalizar `GamePlayer`         | Cambio guiado por el registro; criterios de `asteroids` y un simulado                             |
+| Regresión en los juegos existentes al generalizar `GamePlayer`         | Cambio guiado por el registro; criterios de `asteroids`, `caida` y `bloque-buster`                |
 | Puntuación fuera del rango de la BD (0 a 99 999 999)                   | Acotarla en el motor o en `submitScore`                                                           |
 | {{Riesgos propios del juego}}                                          | {{…}}                                                                                             |
 

@@ -45,12 +45,12 @@ export const ENGINES: Record<string, EngineEntry> = {
     Canvas: CaidaCanvas,
     Controls: CaidaControls,
     hasLives: false,
-    ariaLabel: "Juego Caída en curso",
+    ariaLabel: "Juego Tetris en curso",
   },
   "bloque-buster": {
     Canvas: BloqueBusterCanvas,
     Controls: BloqueBusterControls,
     hasLives: true,
-    ariaLabel: "Juego Bloque Buster en curso",
+    ariaLabel: "Juego Arkanoid en curso",
   },
 };
