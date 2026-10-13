@@ -4,6 +4,8 @@ export const H = 600;
 export const INITIAL_LIVES = 3;
 /** Puntos por bloque roto. */
 export const BLOCK_POINTS = 10;
+/** Tope de la columna `scores.score` (el máximo real del juego es 2 080). */
+export const MAX_SCORE = 99_999_999;
 /** Límite de dt en segundos para evitar saltos tras perder el foco. */
 export const MAX_DT = 0.05;
 export const PADDLE_SPEED = 400; // px/s
