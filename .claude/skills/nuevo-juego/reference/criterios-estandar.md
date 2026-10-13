@@ -17,7 +17,7 @@ Cópialos en la spec y adapta `{{…}}`. Quita los que no apliquen (con motivo) 
 
 ## Juego
 
-- [ ] `/games/{{id}}/jugar` muestra el canvas dentro del marco CRT; no aparecen la arena simulada ni el `setInterval` de puntuación.
+- [ ] `/games/{{id}}/jugar` muestra el canvas dentro del marco CRT.
 - [ ] {{controles}}: cada tecla hace lo descrito en la spec.
 - [ ] {{regla de puntuación 1}}: suma exactamente {{N}} puntos y el HUD de la plataforma lo refleja al instante.
 - [ ] El HUD muestra {{hud}} con valores reales.
@@ -39,7 +39,7 @@ Cópialos en la spec y adapta `{{…}}`. Quita los que no apliquen (con motivo) 
 
 ## Sin regresiones
 
-- [ ] `/games/asteroids/jugar` y un juego simulado (`/games/rocas/jugar`) funcionan como antes.
+- [ ] `/games/asteroids/jugar`, `/games/caida/jugar` y `/games/bloque-buster/jugar` funcionan como antes.
 - [ ] `git diff` no toca `lib/games/asteroids/` ni `components/asteroids-canvas.tsx` (salvo que la spec lo justifique).
 - [ ] `git status` no muestra cambios en `refereences/`.
 - [ ] `lib/db/`, `app/salon/` y `components/leaderboard.tsx` no cambian (salvo justificación en la spec).

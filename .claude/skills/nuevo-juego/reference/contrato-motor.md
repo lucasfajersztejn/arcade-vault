@@ -63,15 +63,14 @@ Modelo: `components/asteroids-canvas.tsx`.
 
 ## Registro de motores
 
-`GamePlayer` hoy ramifica con `game.id === "asteroids"`. En cuanto hay un segundo motor, se generaliza:
+`GamePlayer` elige el motor por `game.id` en un registro:
 
 ```ts
 // lib/games/registry.ts  ("use client")
 export const ENGINES: Record<string, { Canvas: ComponentType<…>; Controls: ComponentType; hasLives: boolean; ariaLabel: string }>;
 ```
 
-- `GamePlayer` consulta `ENGINES[game.id]`. Si no hay entrada, usa la simulación actual (`setInterval` y `.game-arena`).
+- `GamePlayer` consulta `ENGINES[game.id]`. Si no hay entrada, muestra «JUEGO NO DISPONIBLE»: todo juego del catálogo necesita su motor registrado.
 - Las props comunes del canvas (`ref`, `onScore`, `onLives`, `onLevel`, `onGameOver`, `onPause`) tienen la misma forma en todos los juegos para poder tratarlos igual.
-- El paso de `asteroids` al registro es un refactor sin cambio funcional y no toca su motor.
 - Si el juego no tiene vidas, el HUD muestra «—» (ya lo hace con `lives = 0`) o se oculta, según lo decidido.
 - Juego sin niveles: el nivel de la plataforma (`1 + floor(score / 2500)`) no debe mostrarse como si fuera del juego; decidirlo en la spec.
