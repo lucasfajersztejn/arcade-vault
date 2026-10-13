@@ -9,6 +9,7 @@ import {
   BloqueBusterControls,
 } from "@/components/bloque-buster-canvas";
 import { CaidaCanvas, CaidaControls } from "@/components/caida-canvas";
+import { SnakeCanvas, SnakeControls } from "@/components/snake-canvas";
 /** Lo que `GamePlayer` puede pedirle a cualquier motor montado. */
 export type EngineHandle = {
   pause: () => void;
@@ -52,5 +53,11 @@ export const ENGINES: Record<string, EngineEntry> = {
     Controls: BloqueBusterControls,
     hasLives: true,
     ariaLabel: "Juego Arkanoid en curso",
+  },
+  snake: {
+    Canvas: SnakeCanvas,
+    Controls: SnakeControls,
+    hasLives: false,
+    ariaLabel: "Juego Snake en curso",
   },
 };
