@@ -1018,6 +1018,21 @@ a {
   height: 100%;
   background: #000;
 }
+/* snake: tablero cuadrado centrado en la pantalla 4:3 (bandas negras a los lados); en móvil la pantalla pasa a 1:1 para usar todo el ancho */
+.snake-canvas {
+  display: block;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+  background: #000;
+  image-rendering: pixelated;
+}
+@media (max-width: 768px) {
+  .crt-screen:has(> .snake-canvas) {
+    aspect-ratio: 1 / 1;
+  }
+}
 /* caida: Tetris real dentro del marco CRT. El panel lateral conserva el aspecto del original (solo tema oscuro). */
 .crt-screen:has(> .caida-stage) {
   aspect-ratio: auto;
@@ -1800,7 +1815,6 @@ a {
   justify-content: center;
   padding: 64px 0;
 }
-
 /* ===== accesibilidad ===== */
 :focus-visible {
   outline: 2px solid var(--yellow);
