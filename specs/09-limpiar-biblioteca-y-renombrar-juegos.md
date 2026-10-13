@@ -1,6 +1,6 @@
 # SPEC 09 — Limpiar la biblioteca y renombrar los juegos reales
 
-**Estado:** Aprobado 
+**Estado:** Implementado
 **Depende de:** SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por las tablas `games`/`scores` y la FK `on delete cascade`; SPEC 07 (`specs/07-juego-caida.md`) y SPEC 08 (`specs/08-juego-bloque-buster.md`) por los motores reales de `caida` y `bloque-buster`; SPEC 05 (`specs/05-juego-asteroids.md`) por `asteroids`
 **Fecha:** 2026-10-13
 **Objetivo:** Dejar en el catálogo solo los tres juegos con motor real (Bloque Buster, Caída y Asteroids), eliminando los seis simulados y sus puntuaciones, y renombrar de cara al usuario Caída como TETRIS y Bloque Buster como ARKANOID.
@@ -25,7 +25,7 @@ Los nombres «Caída» y «Bloque Buster» eran los de la plantilla. Los juegos 
 - **Textos con el nombre antiguo**: `ariaLabel` de `lib/games/registry.ts` («Juego Caída en curso», «Juego Bloque Buster en curso») pasa a usar el título nuevo. `short` y `long` de los tres juegos no contienen el nombre antiguo y no cambian.
 - **Filtro de categorías**: se quita `"VERSUS"` de `CATS` en `lib/data.ts`, porque ningún juego restante es VERSUS. Quedan TODOS, ARCADE, PUZZLE y SHOOTER.
 - **Borrar las portadas CSS** de los 6 juegos eliminados en `app/globals.css`: `cover-snake`, `cover-glot`, `cover-invaders`, `cover-rocas`, `cover-rana` y `cover-duelo` (con sus `::before`/`::after`). Se conservan `cover-bricks`, `cover-tetro` y `cover-asteroids`.
-- **Borrar la simulación de `GamePlayer`**: el `useEffect` con `setInterval`, la rama `.game-arena` (`grid-floor`, `enemy`, `player-ship`), el nivel calculado por puntuación (`POINTS_PER_LEVEL`) y las ramas `hasEngine`. `GamePlayer` pasa a exigir un motor: si `ENGINES[game.id]` no existe, la ruta cae en el 404 (`notFound()`, a confirmar con la doc de Next 16.4).
+- **Borrar la simulación de `GamePlayer`**: el `useEffect` con `setInterval`, la rama `.game-arena` (`grid-floor`, `enemy`, `player-ship`), el nivel calculado por puntuación (`POINTS_PER_LEVEL`) y las ramas `hasEngine`. `GamePlayer` pasa a exigir un motor: si `ENGINES[game.id]` no existe, `GamePlayer` muestra «JUEGO NO DISPONIBLE» con un botón «VOLVER AL VAULT». La doc local de Next 16.4 solo documenta `notFound()` en Server Components, Server Functions y Route Handlers, no en componentes cliente, así que se aplica el plan B previsto.
 - **Borrar el CSS de la arena simulada** en `app/globals.css`: `.game-arena` y sus hijos (`.grid-floor`, `.player-ship`, `.enemy`, `.e1`, `.e2`, `.e3`) y los `@keyframes bob` y `drift`. `@keyframes gridscroll` se conserva: también lo usa el fondo de la línea 106.
 - **Actualizar la skill `/nuevo-juego`** (`.claude/skills/nuevo-juego/`): quitar de `SKILL.md`, `template-juego.md` y `reference/*` las referencias a juegos simulados (`rocas`, `serpentina`, «conversión de un simulado», regresión con un simulado, «sin arena simulada ni `setInterval`») y dejar como ejemplos de regresión los tres juegos reales. Pasa a ser siempre un juego nuevo con motor.
 - Se conservan **las puntuaciones de los tres juegos que se quedan** (las sembradas y las reales guardadas), sin tocarlas.
@@ -78,7 +78,7 @@ export const CATS = [ALL_CATEGORIES, "ARCADE", "PUZZLE", "SHOOTER"] as const; //
 
 // components/game-player.tsx: sin rama simulada. Los hooks se llaman siempre; después:
 const engine = ENGINES[game.id];
-if (!engine) notFound(); // next/navigation; sin motor no hay juego jugable
+if (!engine) return <JuegoNoDisponible />; // mensaje «JUEGO NO DISPONIBLE» + enlace «VOLVER AL VAULT»
 ```
 
 ---
@@ -91,7 +91,7 @@ if (!engine) notFound(); // next/navigation; sin motor no hay juego jugable
 | `lib/games/registry.ts`                                                      | modificar: `ariaLabel` de `caida` y `bloque-buster` con los títulos nuevos                                                 |
 | `lib/data.ts`                                                                | modificar: quitar `"VERSUS"` de `CATS`                                                                                     |
 | `lib/supabase/database.types.ts`                                             | **no se modifica** (no cambia el esquema)                                                                                  |
-| `components/game-player.tsx`                                                 | modificar: quitar simulación (`setInterval`, `.game-arena`, `POINTS_PER_LEVEL`, ramas `hasEngine`); `notFound()` sin motor |
+| `components/game-player.tsx`                                                 | modificar: quitar simulación (`setInterval`, `.game-arena`, `POINTS_PER_LEVEL`, ramas `hasEngine`); mensaje «JUEGO NO DISPONIBLE» sin motor |
 | `app/globals.css`                                                            | modificar: borrar 6 portadas, `.game-arena` y sus hijos, `@keyframes bob` y `drift`                                        |
 | `.claude/skills/nuevo-juego/SKILL.md`, `template-juego.md`, `reference/*.md` | modificar: quitar referencias a simulados y a `rocas`/`serpentina`                                                         |
 | `lib/games/*/engine`, `lib/db/`                                              | **no se modifican**                                                                                                        |
@@ -106,7 +106,7 @@ Cada paso deja la app compilando (`npm run build`) y navegable.
 1. **Estado previo:** `execute_sql` con el catálogo y `select game_id, count(*) from scores group by game_id order by game_id`. Anotar los conteos para los criterios.
 2. **Migración:** `apply_migration` con `clean_catalog_and_rename_games`. Comprobar con `execute_sql` (3 filas en `games`, títulos y `sort_order` esperados, 0 `scores` de los juegos borrados, 11 en cada juego que queda) y `get_advisors` de seguridad.
 3. **Código:** actualizar `ariaLabel` en `lib/games/registry.ts` y quitar `"VERSUS"` de `CATS` en `lib/data.ts`. Buscar con `grep` restos de los nombres antiguos en `app`, `components` y `lib`.
-4. **Quitar la simulación de `GamePlayer`:** leer la doc local de Next 16.4 sobre `notFound()` en componentes cliente. Eliminar el `useEffect` con `setInterval`, `POINTS_PER_LEVEL`, las ramas `hasEngine` y la rama `.game-arena`; `notFound()` si no hay motor. Comprobar con `grep` que no quedan `setInterval` ni `game-arena` en `components/`.
+4. **Quitar la simulación de `GamePlayer`:** leer la doc local de Next 16.4 sobre `notFound()` en componentes cliente (no está documentado fuera de Server Components, Server Functions y Route Handlers). Eliminar el `useEffect` con `setInterval`, `POINTS_PER_LEVEL`, las ramas `hasEngine` y la rama `.game-arena`; si no hay motor, mensaje «JUEGO NO DISPONIBLE». Comprobar con `grep` que no quedan `setInterval` ni `game-arena` en `components/`.
 5. **Limpiar CSS:** invocar `/frontend-design` y `/ui-ux-pro-max` si el borrado afecta al aspecto de la biblioteca o del marco CRT. Borrar de `app/globals.css` las 6 portadas, `.game-arena` con sus hijos y `@keyframes bob`/`drift`. Conservar `gridscroll`, `cover-bricks`, `cover-tetro` y `cover-asteroids`. Comprobar con `grep` que ninguna clase borrada se usa en `app`, `components` o `lib`.
 6. **Actualizar la skill `/nuevo-juego`:** editar `SKILL.md`, `template-juego.md` y `reference/*.md` para quitar «conversión de un simulado», la regresión con un simulado y el criterio «sin arena simulada ni `setInterval`»; usar los tres juegos reales en los ejemplos.
 7. **Verificación:** `npm run lint` y `npm run build`; recorrer con Playwright `/games`, `/games/bloque-buster`, `/games/caida`, `/games/asteroids`, `/salon`, las tres rutas `/jugar` y una ruta eliminada (`/games/rocas`), en escritorio y a ≤ 768 px; recorrer los criterios de aceptación.
@@ -133,53 +133,53 @@ Los pasos 1 y 7 no producen cambios, por lo que no llevan commit. Los nombres se
 
 ### Build y calidad
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración (los 2 de `public.rls_auto_enable()` ya existían).
-- [ ] `grep -r "service_role" app components lib` no devuelve resultados.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `get_advisors` (seguridad) no reporta avisos nuevos tras la migración (los 2 de `public.rls_auto_enable()` ya existían). *(Solo salen los 2 avisos previos de `public.rls_auto_enable()`.)*
+- [x] `grep -r "service_role" app components lib` no devuelve resultados.
 
 ### Catálogo
 
-- [ ] `select id, title, cat, cover, color, sort_order from games order by sort_order` devuelve exactamente 3 filas: `bloque-buster` / ARKANOID / ARCADE / `cover-bricks` / 1; `caida` / TETRIS / PUZZLE / `cover-tetro` / 2; `asteroids` / ASTEROIDS / SHOOTER / `cover-asteroids` / 3.
-- [ ] `select count(*) from scores where game_id in ('serpentina','gloton','invasores','rocas','ranaria','duelo-pixel')` devuelve 0.
-- [ ] `scores` de `bloque-buster`, `caida` y `asteroids` conservan sus 11 filas cada uno (los conteos del paso 1).
-- [ ] `/games` muestra exactamente 3 tarjetas, en este orden: ARKANOID, TETRIS, ASTEROIDS, cada una con su portada.
-- [ ] El filtro de categorías muestra TODOS, ARCADE, PUZZLE y SHOOTER (sin VERSUS); cada filtro lista exactamente su juego, y TODOS lista los 3.
-- [ ] `/games/bloque-buster`, `/games/caida` y `/games/asteroids` muestran el detalle con el título nuevo (ARKANOID, TETRIS, ASTEROIDS) y su ranking de 10 filas.
-- [ ] `/games/rocas`, `/games/serpentina` y las demás rutas de juegos eliminados devuelven el 404 de la plataforma (SPEC 02), tanto el detalle como `/jugar`.
-- [ ] No queda «Bloque Buster» ni «Caída» como nombre de juego en la UI: `grep -rE "Bloque Buster|BLOQUE BUSTER|Juego Caída|CAÍDA" app components lib` no devuelve resultados.
+- [x] `select id, title, cat, cover, color, sort_order from games order by sort_order` devuelve exactamente 3 filas: `bloque-buster` / ARKANOID / ARCADE / `cover-bricks` / 1; `caida` / TETRIS / PUZZLE / `cover-tetro` / 2; `asteroids` / ASTEROIDS / SHOOTER / `cover-asteroids` / 3.
+- [x] `select count(*) from scores where game_id in ('serpentina','gloton','invasores','rocas','ranaria','duelo-pixel')` devuelve 0.
+- [x] `scores` de `bloque-buster`, `caida` y `asteroids` conservan sus 11 filas cada uno (los conteos del paso 1).
+- [x] `/games` muestra exactamente 3 tarjetas, en este orden: ARKANOID, TETRIS, ASTEROIDS, cada una con su portada.
+- [x] El filtro de categorías muestra TODOS, ARCADE, PUZZLE y SHOOTER (sin VERSUS); cada filtro lista exactamente su juego, y TODOS lista los 3. *(Verificados los 4 filtros y las 3 tarjetas con TODOS; no se pulsó cada filtro.)*
+- [x] `/games/bloque-buster`, `/games/caida` y `/games/asteroids` muestran el detalle con el título nuevo (ARKANOID, TETRIS, ASTEROIDS) y su ranking de 10 filas. *(Verificados el título, «PARTIDAS» (11) y «MEJOR GLOBAL»; no se contaron las filas del top 10.)*
+- [x] `/games/rocas`, `/games/serpentina` y las demás rutas de juegos eliminados muestran la página 404 de la plataforma (SPEC 02), tanto el detalle como `/jugar`. El código HTTP es 200 porque `notFound()` se ejecuta dentro de `<Suspense>` y la doc de Next conserva ahí el 200; la página lleva `noindex`.
+- [x] No queda «Bloque Buster» ni «Caída» como nombre de juego en la UI: `grep -rE "Bloque Buster|BLOQUE BUSTER|Juego Caída|CAÍDA" app components lib` no devuelve resultados.
 
 ### Limpieza de código
 
-- [ ] `grep -rE "setInterval|game-arena|grid-floor|player-ship|POINTS_PER_LEVEL|hasEngine" components app lib` no devuelve resultados.
-- [ ] `grep -E "cover-(snake|glot|invaders|rocas|rana|duelo)|\.game-arena|@keyframes (bob|drift)" app/globals.css` no devuelve resultados, y `cover-bricks`, `cover-tetro`, `cover-asteroids` y `@keyframes gridscroll` siguen presentes.
-- [ ] Ninguna clase CSS borrada se referencia en `app`, `components` o `lib`.
-- [ ] Un `id` de juego sin entrada en `ENGINES` (p. ej. `/games/rocas/jugar`) devuelve el 404 de la plataforma, no una pantalla rota.
-- [ ] `grep -riE "rocas|serpentina|simulad|setInterval|game-arena" .claude/skills/nuevo-juego` no devuelve resultados.
-- [ ] `/nuevo-juego` sigue coherente: no ofrece «conversión de un simulado» y sus ejemplos y criterios de regresión citan `asteroids`, `caida` y `bloque-buster`.
+- [x] `grep -rE "setInterval|game-arena|grid-floor|player-ship|POINTS_PER_LEVEL|hasEngine" components app lib` no devuelve resultados.
+- [x] `grep -E "cover-(snake|glot|invaders|rocas|rana|duelo)|\.game-arena|@keyframes (bob|drift)" app/globals.css` no devuelve resultados, y `cover-bricks`, `cover-tetro`, `cover-asteroids` y `@keyframes gridscroll` siguen presentes.
+- [x] Ninguna clase CSS borrada se referencia en `app`, `components` o `lib`.
+- [x] Un `id` de juego sin entrada en `ENGINES` muestra «JUEGO NO DISPONIBLE» con un enlace de vuelta, no una pantalla rota. *(Solo por código: ningún juego de la BD carece de motor y no se forzó el caso.)*
+- [x] `grep -riE "rocas|serpentina|simulad|setInterval|game-arena" .claude/skills/nuevo-juego` no devuelve resultados.
+- [x] `/nuevo-juego` sigue coherente: no ofrece «conversión de un simulado» y sus ejemplos y criterios de regresión citan `asteroids`, `caida` y `bloque-buster`.
 
 ### Juego
 
-- [ ] `/games/bloque-buster/jugar` y `/games/caida/jugar` y `/games/asteroids/jugar` funcionan como antes (canvas, HUD, pausa, FIN y modal de guardado).
-- [ ] El `aria-label` del juego en curso usa «Arkanoid» y «Tetris».
+- [x] `/games/bloque-buster/jugar` y `/games/caida/jugar` y `/games/asteroids/jugar` funcionan como antes (canvas, HUD, pausa, FIN y modal de guardado). *(Verificados canvas, HUD, PAUSA/REANUDAR, FIN y modal con guardado. Las partidas fueron cortas: FIN inmediato, puntuación 0.)*
+- [x] El `aria-label` del juego en curso usa «Arkanoid» y «Tetris».
 
 ### Leaderboard
 
-- [ ] `/salon` muestra exactamente 3 pestañas (ARKANOID, TETRIS, ASTEROIDS), cada una con podio y tabla coherentes con la vista `leaderboard`.
-- [ ] Guardar una puntuación en cualquiera de los tres juegos crea una fila en `scores` con el `game_id` original y aparece en el ranking al recargar.
-- [ ] Con sesión iniciada, «TU MEJOR MARCA EN …» usa el título nuevo del juego elegido.
-- [ ] `plays` y «Mejor global» de cada juego coinciden con `count(*)` y `max(score)` de `scores`.
+- [x] `/salon` muestra exactamente 3 pestañas (ARKANOID, TETRIS, ASTEROIDS), cada una con podio y tabla coherentes con la vista `leaderboard`. *(Pestaña ASTEROIDS verificada con captura: podio y 11 filas. ARKANOID y TETRIS, solo por los datos de la BD.)*
+- [x] Guardar una puntuación en cualquiera de los tres juegos crea una fila en `scores` con el `game_id` original y aparece en el ranking al recargar. *(Verificada la fila en `scores` con el `game_id` correcto (nombre `TEST09`, puntuación 0). No se comprobó la aparición en el ranking: la puntuación 0 no entra en el top y las 3 filas de prueba se borraron.)*
+- [ ] Con sesión iniciada, «TU MEJOR MARCA EN …» usa el título nuevo del juego elegido. *(No verificado: no se inició sesión en esta verificación.)*
+- [x] `plays` y «Mejor global» de cada juego coinciden con `count(*)` y `max(score)` de `scores`.
 
 ### Sin regresiones
 
-- [ ] `git diff` no toca `lib/games/asteroids/`, `lib/games/caida/`, `lib/games/bloque-buster/`, `lib/db/`, `components/leaderboard.tsx` ni `components/hall-of-fame.tsx`.
-- [ ] `git diff` de `components/game-player.tsx` solo elimina la simulación y añade `notFound()`: HUD, pausa, FIN, guardado y modal no cambian.
-- [ ] `git status` no muestra cambios en `refereences/` ni en `specs/01` a `specs/08`.
-- [ ] La sesión `av_user` sigue funcionando y `/`, `/about` y `/login` cargan como antes.
+- [x] `git diff` no toca `lib/games/asteroids/`, `lib/games/caida/`, `lib/games/bloque-buster/`, `lib/db/`, `components/leaderboard.tsx` ni `components/hall-of-fame.tsx`.
+- [x] `git diff` de `components/game-player.tsx` solo elimina la simulación y añade el mensaje «JUEGO NO DISPONIBLE»: HUD, pausa, FIN, guardado y modal no cambian.
+- [x] `git status` no muestra cambios en `refereences/` ni en `specs/01` a `specs/08`. *(Verificado con `git diff main...HEAD`.)*
+- [ ] La sesión `av_user` sigue funcionando y `/`, `/about` y `/login` cargan como antes. *(Verificado solo que `/`, `/about` y `/login` responden 200; no se probó la sesión `av_user`.)*
 
 ### Proceso
 
-- [ ] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px).
-- [ ] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación.
+- [x] Capturas de Playwright en `.playwright-screenshots/` y artefactos del MCP en `.playwright-mcp/` (escritorio y ≤ 768 px). *(21 capturas `09-*`. A 390 px: biblioteca, detalle de Tetris, las 3 rutas `/jugar` y Salón; el resto, solo en escritorio.)*
+- [ ] Tras cada paso con cambios se propuso al usuario un nombre de commit con el formato `feat: descripción corta en inglés` y no se hizo commit sin su confirmación. *(No cumplido del todo: al llegar al paso 7 los commits de los pasos 3 a 6 ya estaban hechos en la rama; no los hizo el agente. Los pasos 1, 2 y 7 no producen cambios de archivos.)*
 
 ### Verificación manual recomendada (paso final)
 
@@ -200,7 +200,7 @@ Los pasos 1 y 7 no producen cambios, por lo que no llevan commit. Los nombres se
 - **Orden ARKANOID (1), TETRIS (2), ASTEROIDS (3)**: el relativo que ya tenían, compactado. _Descartado:_ dejar huecos en `sort_order` (3, 2 y 7).
 - **Se quita `VERSUS` del filtro, no de la BD ni del tipo** (decisión del usuario). Un filtro vacío confunde; mantener el `CHECK` y `GameCategory` evita una migración de esquema y deja la categoría lista para un juego futuro. _Descartado:_ dejar el filtro vacío; borrar la categoría de BD y tipos.
 - **Se limpia el código huérfano en la misma spec** (decisión del usuario): portadas CSS de los 6 eliminados, simulación de `GamePlayer`, CSS de la arena y skill `/nuevo-juego`. Dejarlo sería código muerto que nadie ejecuta ni mantiene. _Descartado:_ spec aparte (el código muerto sobreviviría de verdad).
-- **`GamePlayer` sin motor → `notFound()`.** Un juego en BD sin entrada en `ENGINES` no es jugable y debe fallar claramente. _Descartado:_ mantener un respaldo simulado; mostrar un mensaje propio (más UI sin uso).
+- **`GamePlayer` sin motor → mensaje «JUEGO NO DISPONIBLE».** Un juego en BD sin entrada en `ENGINES` no es jugable y debe fallar claramente. La doc de Next 16.4 no documenta `notFound()` en componentes cliente, así que se aplicó el plan B de la spec, con un mensaje mínimo y un enlace «VOLVER AL VAULT». Los `id` que no están en la BD siguen dando el 404 real desde `page.tsx` (`getGame` devuelve `null`). _Descartado:_ mantener un respaldo simulado; `notFound()` desde un componente cliente (no documentado).
 - **`@keyframes gridscroll` se conserva.** Lo usa también un fondo global (línea 106 de `globals.css`); solo se borran `bob` y `drift`.
 - **`/nuevo-juego` pasa a «solo juegos nuevos con motor».** Al no quedar simulados, desaparece el caso «conversión de un simulado». _Descartado:_ dejar el caso documentado «por si acaso».
 - **Las specs anteriores no se editan.** Son histórico y se refieren a los juegos por el nombre de su época. _Descartado:_ reescribirlas.
@@ -216,10 +216,10 @@ Los pasos 1 y 7 no producen cambios, por lo que no llevan commit. Los nombres se
 | Un `delete` mal filtrado borra los juegos reales                                         | El `where id in (...)` lista los 6 `id` explícitos; el criterio verifica que quedan 3 filas y 11 `scores` en cada una     |
 | Rutas antiguas (`/games/rocas`, etc.) guardadas por usuarios dan error                   | `getGame` devuelve vacío y la ruta cae en el 404 de la plataforma (SPEC 02); criterio explícito                           |
 | Romper `GamePlayer` (componente crítico) al quitar la simulación                         | Solo se borra la rama simulada; criterio de `git diff` y recorrido de las tres rutas `/jugar` (HUD, pausa, FIN, guardado) |
-| `notFound()` no funciona dentro de un componente cliente en Next 16.4                    | Paso 4 lee la doc local; si no vale, sustituirlo por un mensaje mínimo «Juego no disponible» y anotarlo                   |
+| `notFound()` no funciona dentro de un componente cliente en Next 16.4                    | **Materializado:** la doc no lo documenta; se aplicó el mensaje mínimo «JUEGO NO DISPONIBLE» (decisión anotada arriba)   |
 | Borrar una clase CSS que aún se usa (p. ej. `gridscroll`, `bob` o `drift`)               | `gridscroll` se conserva; `grep` de cada clase borrada en `app`, `components` y `lib` antes de borrar                     |
 | La skill `/nuevo-juego` queda incoherente tras quitar los simulados                      | Criterio con `grep` sobre `.claude/skills/nuevo-juego` y repaso del flujo de `SKILL.md`                                   |
-| Un juego nuevo sin motor daría 404 en lugar de una simulación                            | Es lo deseado; `/nuevo-juego` añade siempre el motor al registro                                                          |
+| Un juego nuevo sin motor mostraría «JUEGO NO DISPONIBLE» en lugar de una simulación                            | Es lo deseado; `/nuevo-juego` añade siempre el motor al registro                                                          |
 | El título del `id` `caida` (TETRIS) y el slug `caida` pueden confundir al leer el código | Decisión consciente; se documenta aquí. Un renombrado de `id` queda para una spec propia si se quiere                     |
 | Restos de los nombres antiguos en la UI                                                  | Paso 3 con `grep`; criterio de aceptación con `grep`                                                                      |
 
