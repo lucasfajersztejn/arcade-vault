@@ -1,6 +1,6 @@
 # SPEC 12 — Gamepad estándar MK-II para móvil/tablet
 
-**Estado:** Aprobado
+**Estado:** Implementando
 **Depende de:** SPEC 11 (`specs/11-controles-tactiles-movil.md`) por el contrato `setInput` y el enganche en `GamePlayer`; SPEC 05 (`specs/05-juego-asteroids.md`), SPEC 07 (`specs/07-juego-caida.md`), SPEC 08 (`specs/08-juego-bloque-buster.md`) y SPEC 10 (`specs/10-juego-snake.md`) por los motores que exponen `setInput`.
 **Fecha:** 2026-10-14
 **Objetivo:** Unificar los controles táctiles de los 4 juegos del catálogo en un único gamepad neón MK-II con silueta fija (D-pad de 4 flechas + 2 botones circulares A magenta y B cyan), basado en `refereences/gamepad-assets/`.
@@ -189,51 +189,51 @@ Los pasos 1 y 2 no producen cambios.
 
 ### Build y calidad
 
-- [ ] `npm run lint` y `npm run build` terminan sin errores.
-- [ ] `grep -rn "touchLayout\|TouchLayoutId" app components lib` no devuelve resultados (el símbolo fue eliminado).
-- [ ] `grep -rn "navigator.vibrate" app components lib` no devuelve resultados.
+- [x] `npm run lint` y `npm run build` terminan sin errores.
+- [x] `grep -rn "touchLayout\|TouchLayoutId" app components lib` no devuelve resultados (el símbolo fue eliminado).
+- [x] `grep -rn "navigator.vibrate" app components lib` no devuelve resultados.
 
 ### Silueta y estética
 
-- [ ] En los 4 juegos (`/games/<id>/jugar`) a `(pointer: coarse)` o viewport ≤ 1024 px, el gamepad muestra siempre: D-pad con las 4 flechas visibles + hub central con "gema" pulsante + 2 botones circulares (B cyan a la izquierda, A magenta a la derecha).
-- [ ] El gamepad es visualmente **idéntico** en los 4 juegos (el único diff entre capturas es qué slots están inertes).
-- [ ] Las flechas y botones inertes se pintan apagados (opacidad reducida, sin hover, `cursor: default`) y **no** disparan `setInput` al pulsarlos.
-- [ ] A pulsado se ilumina en magenta; B en cyan; una flecha activa pulsada se ilumina en cyan (igual que la referencia).
+- [x] En los 4 juegos (`/games/<id>/jugar`) a `(pointer: coarse)` o viewport ≤ 1024 px, el gamepad muestra siempre: D-pad con las 4 flechas visibles + hub central con "gema" pulsante + 2 botones circulares (B cyan a la izquierda, A magenta a la derecha).
+- [x] El gamepad es visualmente **idéntico** en los 4 juegos (el único diff entre capturas es qué slots están inertes).
+- [x] Las flechas y botones inertes se pintan apagados (opacidad reducida, sin hover, `cursor: default`) y **no** disparan `setInput` al pulsarlos.
+- [x] A pulsado se ilumina en magenta; B en cyan; una flecha activa pulsada se ilumina en cyan (igual que la referencia).
 
 ### Mapeo por juego
 
-- [ ] **Asteroids:** ← rot-left, → rot-right, ↑ thrust, ↓ inerte, A dispara, B hiperespacio. Mantener ↑ aplica propulsión mientras se mantiene; A dispara una vez por pulsación; B lanza hiper una vez por pulsación.
-- [ ] **Caída:** ← izq, → der, ↓ soft drop, ↑ inerte, A rota, B hard drop. A y B disparan una sola vez por pulsación.
-- [ ] **Bloque Buster:** ← izq, → der, ↑ y ↓ inertes, A lanza, B inerte. A dispara una vez por pulsación.
-- [ ] **Snake:** las 4 flechas giran la serpiente; A y B inertes.
-- [ ] En los 4 juegos, pulsar un slot activo funciona con la partida en curso **y** desde el estado inicial.
+- [x] **Asteroids:** ← rot-left, → rot-right, ↑ thrust, ↓ inerte, A dispara, B hiperespacio. Mantener ↑ aplica propulsión mientras se mantiene; A dispara una vez por pulsación; B lanza hiper una vez por pulsación.
+- [x] **Caída:** ← izq, → der, ↓ soft drop, ↑ inerte, A rota, B hard drop. A y B disparan una sola vez por pulsación.
+- [x] **Bloque Buster:** ← izq, → der, ↑ y ↓ inertes, A lanza, B inerte. A dispara una vez por pulsación.
+- [x] **Snake:** las 4 flechas giran la serpiente; A y B inertes.
+- [x] En los 4 juegos, pulsar un slot activo funciona con la partida en curso **y** desde el estado inicial.
 
 ### Visibilidad
 
-- [ ] En viewport > 1024 px con puntero `fine` (escritorio), el gamepad no se monta.
-- [ ] En iPad portrait (820 px) y landscape (1024 px) el gamepad aparece en banda bajo el marco CRT sin tapar el canvas.
-- [ ] Con el modal "GUARDAR PUNTUACIÓN" abierto, el gamepad se oculta (mismo criterio que SPEC 11).
+- [x] En viewport > 1024 px con puntero `fine` (escritorio), el gamepad no se monta.
+- [x] En iPad portrait (820 px) y landscape (1024 px) el gamepad aparece en banda bajo el marco CRT sin tapar el canvas.
+- [x] Con el modal "GUARDAR PUNTUACIÓN" abierto, el gamepad se oculta (mismo criterio que SPEC 11).
 
 ### Multi-touch y pointer
 
-- [ ] Mantener una flecha con un dedo y pulsar A con otro no cancela el movimiento (verificado con `page.touchscreen` o `pointerdown`/`pointerup` con dos `pointerId` distintos en Playwright).
-- [ ] Arrastrar el dedo fuera del botón sin levantar no deja el botón "pegado" (`setPointerCapture` + `pointercancel`).
-- [ ] Al desmontar el componente o navegar fuera, se liberan todos los `pointerId` capturados y se emite `setInput(action, false)` para los slots activos.
+- [x] Mantener una flecha con un dedo y pulsar A con otro no cancela el movimiento (verificado con `page.touchscreen` o `pointerdown`/`pointerup` con dos `pointerId` distintos en Playwright).
+- [x] Arrastrar el dedo fuera del botón sin levantar no deja el botón "pegado" (`setPointerCapture` + `pointercancel`).
+- [x] Al desmontar el componente o navegar fuera, se liberan todos los `pointerId` capturados y se emite `setInput(action, false)` para los slots activos.
 
 ### Sin regresiones
 
-- [ ] El teclado en escritorio sigue funcionando igual que antes en los 4 juegos.
-- [ ] `git diff` no toca `lib/games/*/engine.ts`, `lib/games/*/types.ts`, `components/*-canvas.tsx`, `lib/db/`, migraciones ni `refereences/`.
-- [ ] `apply_migration` no se ejecuta (no hay cambios de BD).
-- [ ] Las skins (`/salon`, selector en `GamePlayer`) siguen funcionando y **no** alteran el color del gamepad (siempre cyan/magenta).
+- [x] El teclado en escritorio sigue funcionando igual que antes en los 4 juegos.
+- [x] `git diff` no toca `lib/games/*/engine.ts`, `lib/games/*/types.ts`, `components/*-canvas.tsx`, `lib/db/`, migraciones ni `refereences/`.
+- [x] `apply_migration` no se ejecuta (no hay cambios de BD).
+- [x] Las skins (`/salon`, selector en `GamePlayer`) siguen funcionando y **no** alteran el color del gamepad (siempre cyan/magenta).
 - [ ] `/games`, `/games/[id]`, `/salon`, `/`, `/about` y `/login` sin regresión visual en escritorio ni móvil.
 
 ### Proceso
 
-- [ ] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para el gamepad y los estados inertes, y sus recomendaciones quedaron aplicadas (o descartadas con motivo).
-- [ ] Se leyó la documentación local de Next 16.4 antes de escribir código.
-- [ ] Capturas de Playwright (iPhone 13 + Pixel 7 + iPad, portrait y landscape, los 4 juegos) en `.playwright-screenshots/spec12-*`.
-- [ ] Nombres de commit propuestos en inglés (`feat: …` / `refactor: …` / `test: …`) y no ejecutados sin confirmación.
+- [x] Se invocaron `/frontend-design` y `/ui-ux-pro-max` para el gamepad y los estados inertes, y sus recomendaciones quedaron aplicadas (o descartadas con motivo).
+- [x] Se leyó la documentación local de Next 16.4 antes de escribir código.
+- [x] Capturas de Playwright (iPhone 13 + Pixel 7 + iPad, portrait y landscape, los 4 juegos) en `.playwright-screenshots/spec12-*`.
+- [x] Nombres de commit propuestos en inglés (`feat: …` / `refactor: …` / `test: …`) y no ejecutados sin confirmación.
 
 ### Verificación manual recomendada (paso final)
 
