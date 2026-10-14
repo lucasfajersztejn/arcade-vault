@@ -1,19 +1,29 @@
 "use client";
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import { createAsteroids } from "@/lib/games/asteroids/engine";
+import { SKINS } from "@/lib/games/asteroids/skins";
 import type {
   AsteroidsCallbacks,
   AsteroidsEngine,
 } from "@/lib/games/asteroids/types";
+import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
 export type AsteroidsHandle = Pick<
   AsteroidsEngine,
   "pause" | "resume" | "restart" | "end"
 >;
-type Props = AsteroidsCallbacks & { ref?: Ref<AsteroidsHandle> };
-export function AsteroidsCanvas({ ref, ...callbacks }: Props) {
+type Props = AsteroidsCallbacks & {
+  ref?: Ref<AsteroidsHandle>;
+  skin?: SkinId;
+};
+export function AsteroidsCanvas({
+  ref,
+  skin = DEFAULT_SKIN,
+  ...callbacks
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<AsteroidsEngine | null>(null);
   const callbacksRef = useRef<AsteroidsCallbacks>(callbacks);
+  const skinRef = useRef<SkinId>(skin);
   // El motor se crea una sola vez; los callbacks se leen siempre en su última versión.
   useEffect(() => {
     callbacksRef.current = callbacks;
@@ -21,19 +31,28 @@ export function AsteroidsCanvas({ ref, ...callbacks }: Props) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const engine = createAsteroids(canvas, {
-      onScore: (v) => callbacksRef.current.onScore(v),
-      onLives: (v) => callbacksRef.current.onLives(v),
-      onLevel: (v) => callbacksRef.current.onLevel(v),
-      onGameOver: (v) => callbacksRef.current.onGameOver(v),
-      onPause: (v) => callbacksRef.current.onPause?.(v),
-    });
+    const engine = createAsteroids(
+      canvas,
+      {
+        onScore: (v) => callbacksRef.current.onScore(v),
+        onLives: (v) => callbacksRef.current.onLives(v),
+        onLevel: (v) => callbacksRef.current.onLevel(v),
+        onGameOver: (v) => callbacksRef.current.onGameOver(v),
+        onPause: (v) => callbacksRef.current.onPause?.(v),
+      },
+      { palette: SKINS[skinRef.current] },
+    );
     engineRef.current = engine;
     return () => {
       engine.destroy();
       engineRef.current = null;
     };
   }, []);
+  // Cambio de skin en vivo: no recrea el motor ni reinicia la partida.
+  useEffect(() => {
+    skinRef.current = skin;
+    engineRef.current?.setPalette(SKINS[skin]);
+  }, [skin]);
   useImperativeHandle(
     ref,
     () => ({

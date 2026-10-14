@@ -1,3 +1,8 @@
+import type { AsteroidsPalette } from "./skins";
+export type AsteroidsOptions = {
+  /** Paleta de color inicial; si falta se usa la de `clasico`. */
+  palette?: AsteroidsPalette;
+};
 export type AsteroidsCallbacks = {
   onScore: (score: number) => void;
   onLives: (lives: number) => void;
@@ -16,4 +21,6 @@ export type AsteroidsEngine = {
   end: () => void;
   /** Cancela el bucle y quita todos los listeners. */
   destroy: () => void;
+  /** Cambia la paleta de color en vivo (también en pausa / game over). */
+  setPalette: (palette: AsteroidsPalette) => void;
 };

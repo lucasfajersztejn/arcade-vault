@@ -46,6 +46,7 @@ export const ENGINES: Record<string, EngineEntry> = {
     Controls: AsteroidsControls,
     hasLives: true,
     ariaLabel: "Juego Asteroids en curso",
+    skins: SKIN_IDS,
   },
   caida: {
     Canvas: CaidaCanvas,

@@ -15,6 +15,7 @@ import {
   TRIPLE_SPREAD,
   W,
 } from "./constants";
+import type { AsteroidsPalette } from "./skins";
 import { rand, randInt, wrap } from "./utils";
 /** Teclas mantenidas, indexadas por `KeyboardEvent.code`. */
 export type Keys = Record<string, boolean | undefined>;
@@ -38,8 +39,8 @@ export class Bullet {
     this.ttl -= dt;
     if (this.ttl <= 0) this.dead = true;
   }
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = "#fff";
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
+    ctx.fillStyle = palette.bullet;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -87,11 +88,11 @@ export class Asteroid {
       new Asteroid(this.x, this.y, this.size - 1),
     ];
   }
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = palette.asteroid;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = "round";
     ctx.beginPath();
@@ -126,7 +127,11 @@ export class PowerUp {
     if (this.ttl <= 0) this.dead = true;
   }
   /** Con `reducedMotion` no hay pulso ni parpadeo final: el icono queda estático. */
-  draw(ctx: CanvasRenderingContext2D, reducedMotion = false) {
+  draw(
+    ctx: CanvasRenderingContext2D,
+    palette: AsteroidsPalette,
+    reducedMotion = false,
+  ) {
     if (!reducedMotion && this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0)
       return;
     const pulse = reducedMotion
@@ -135,12 +140,12 @@ export class PowerUp {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.PI / 4);
-    ctx.strokeStyle = "#0ff";
+    ctx.strokeStyle = palette.powerUp;
     ctx.lineWidth = 2;
     const r = this.radius * pulse;
     ctx.strokeRect(-r, -r, r * 2, r * 2);
     ctx.restore();
-    ctx.fillStyle = "#0ff";
+    ctx.fillStyle = palette.powerUp;
     ctx.font = "bold 12px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -202,7 +207,7 @@ export class Ship {
     }
     return [new Bullet(ox, oy, this.angle)];
   }
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
     if (this.dead) return;
     // Parpadeo durante la invencibilidad de reaparición
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0)
@@ -210,7 +215,7 @@ export class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = palette.ship;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = "round";
     // Silueta clásica: triángulo con muesca trasera
@@ -227,7 +232,7 @@ export class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - rand(6, 14), 0);
       ctx.lineTo(-8, 4);
-      ctx.strokeStyle = "rgba(255, 130, 0, 0.85)";
+      ctx.strokeStyle = palette.thrust;
       ctx.stroke();
     }
     ctx.restore();
@@ -257,9 +262,9 @@ export class Particle {
     this.ttl -= dt;
     if (this.ttl <= 0) this.dead = true;
   }
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, palette: AsteroidsPalette) {
     const alpha = this.ttl / this.life;
-    ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+    ctx.strokeStyle = `rgba(${palette.particleRgb},${alpha.toFixed(2)})`;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
