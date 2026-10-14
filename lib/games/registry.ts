@@ -17,6 +17,8 @@ export type EngineHandle = {
   resume: () => void;
   restart: () => void;
   end: () => void;
+  /** Entrada táctil del overlay. */
+  setInput: (action: string, pressed: boolean) => void;
 };
 /** Props comunes de los canvas de los motores; un motor sin vidas o sin nivel simplemente las ignora. */
 export type EngineCanvasProps = {

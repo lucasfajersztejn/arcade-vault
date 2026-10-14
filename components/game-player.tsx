@@ -1,5 +1,7 @@
 "use client";
 import {
+  useCallback,
+  useEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -9,6 +11,7 @@ import {
 import Link from "next/link";
 import { submitScore } from "@/lib/db/scores";
 import { ENGINES, type EngineHandle } from "@/lib/games/registry";
+import { TouchControls } from "@/components/touch-controls";
 import {
   DEFAULT_SKIN,
   readSkin,
@@ -31,6 +34,18 @@ function subscribeSkin(callback: () => void) {
     window.removeEventListener(SKIN_CHANGE_EVENT, callback);
   };
 }
+/** `true` cuando el navegador tiene puntero coarse (táctil) o viewport ≤ 768 px. */
+function useTouchViewport() {
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(pointer: coarse), (max-width: 768px)");
+    const update = () => setIsTouch(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+  return isTouch;
+}
 export function GamePlayer({ game }: { game: Game }) {
   const { user } = useSession();
   const [score, setScore] = useState(0);
@@ -49,8 +64,12 @@ export function GamePlayer({ game }: { game: Game }) {
   );
   const modalRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<EngineHandle>(null);
+  const isTouch = useTouchViewport();
   // Los juegos jugables son los del registro de motores.
   const engine = ENGINES[game.id];
+  const handleTouchInput = useCallback((action: string, pressed: boolean) => {
+    engineRef.current?.setInput(action, pressed);
+  }, []);
   const changeSkin = (next: SkinId) => {
     // Persistir y notificar: no reinicia la partida ni toca la puntuación.
     writeSkin(game.id, next);
@@ -214,6 +233,13 @@ export function GamePlayer({ game }: { game: Game }) {
                 </div>
               </div>
             </div>
+          )}
+          {isTouch && engine.touchLayout && engine.touchActions && !over && (
+            <TouchControls
+              layout={engine.touchLayout}
+              actions={engine.touchActions}
+              onInput={handleTouchInput}
+            />
           )}
         </div>
         <div className="crt-bottom">

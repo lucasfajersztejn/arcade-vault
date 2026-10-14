@@ -9,7 +9,7 @@ import type {
 import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
 export type BloqueBusterHandle = Pick<
   BloqueBusterEngine,
-  "pause" | "resume" | "restart" | "end"
+  "pause" | "resume" | "restart" | "end" | "setInput"
 >;
 type Props = BloqueBusterCallbacks & {
   ref?: Ref<BloqueBusterHandle>;
@@ -61,6 +61,8 @@ export function BloqueBusterCanvas({
       resume: () => engineRef.current?.resume(),
       restart: () => engineRef.current?.restart(),
       end: () => engineRef.current?.end(),
+      setInput: (action, pressed) =>
+        engineRef.current?.setInput(action, pressed),
     }),
     [],
   );

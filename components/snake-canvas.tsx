@@ -7,7 +7,7 @@ import type { SnakeCallbacks, SnakeEngine } from "@/lib/games/snake/types";
 import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
 export type SnakeHandle = Pick<
   SnakeEngine,
-  "pause" | "resume" | "restart" | "end"
+  "pause" | "resume" | "restart" | "end" | "setInput"
 >;
 type Props = SnakeCallbacks & { ref?: Ref<SnakeHandle>; skin?: SkinId };
 export function SnakeCanvas({ ref, skin = DEFAULT_SKIN, ...callbacks }: Props) {
@@ -52,6 +52,8 @@ export function SnakeCanvas({ ref, skin = DEFAULT_SKIN, ...callbacks }: Props) {
       resume: () => engineRef.current?.resume(),
       restart: () => engineRef.current?.restart(),
       end: () => engineRef.current?.end(),
+      setInput: (action, pressed) =>
+        engineRef.current?.setInput(action, pressed),
     }),
     [],
   );
