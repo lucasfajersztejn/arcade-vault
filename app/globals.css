@@ -1680,12 +1680,10 @@ a {
     overflow: hidden;
     white-space: nowrap;
   }
-  /* El selector de skin, si existe, pasa a una cuarta columna en una fila nueva. */
-  .hud-actions:has(.hud-skin) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  /* Si existe el selector de skin, ocupa su propia fila por encima de los botones. */
   .hud-actions:has(.hud-skin) .hud-skin {
     grid-column: 1 / -1;
+    order: -1;
   }
 }
 /* misc */
@@ -2283,11 +2281,12 @@ a {
   overflow: hidden;
 }
 /* ===== TOUCH OVERLAY (SPEC 11) =====
-   Estética joystick arcade: D-pad grande sobre placa circular y botones de
-   acción tipo arcade. Solo visible en dispositivos táctiles o viewport ≤ 768 px. */
+   Overlay táctil compacto sobre el canvas: 4 flechas en cruz tipo D-pad arcade
+   y 1 botón de acción. Semitransparente para que el canvas siga visible debajo.
+   Solo activo en dispositivos táctiles o viewport ≤ 768 px. */
 .touch-overlay {
-  --dpad-cell: 68px;
-  --action-size: 84px;
+  --dpad-cell: 48px;
+  --action-size: 62px;
   position: absolute;
   inset: 0;
   z-index: 6;
@@ -2305,29 +2304,17 @@ a {
 }
 .touch-dpad {
   position: absolute;
-  left: calc(12px + env(safe-area-inset-left, 0px));
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  left: calc(8px + env(safe-area-inset-left, 0px));
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   display: grid;
   grid-template-rows: repeat(3, auto);
-  gap: 4px;
-  padding: 10px;
+  gap: 3px;
   pointer-events: none;
-  background: radial-gradient(
-    circle at center,
-    rgba(0, 245, 255, 0.1) 0%,
-    rgba(10, 10, 15, 0.55) 55%,
-    rgba(10, 10, 15, 0.35) 100%
-  );
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 2px rgba(0, 245, 255, 0.25),
-    inset 0 0 20px rgba(0, 245, 255, 0.08);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* Sin placa circular: los botones flotan en forma de cruz para no tapar el canvas. */
 }
 .touch-dpad-row {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   justify-content: center;
 }
 .touch-dpad-btn,
@@ -2339,51 +2326,36 @@ a {
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
   font-family: var(--pixel);
-  color: var(--ink);
-  border: 1px solid rgba(0, 245, 255, 0.35);
-  background: rgba(10, 10, 15, 0.75);
+  color: var(--cyan);
+  border: 1px solid rgba(0, 245, 255, 0.4);
+  background: rgba(10, 10, 15, 0.45);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  text-shadow: 0 0 6px rgba(0, 245, 255, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   transition:
     transform 80ms ease-out,
     box-shadow 80ms ease-out,
     color 80ms ease-out,
-    border-color 80ms ease-out;
+    border-color 80ms ease-out,
+    background 80ms ease-out;
 }
 .touch-dpad-btn {
   width: var(--dpad-cell);
   height: var(--dpad-cell);
-  font-size: 28px;
-  color: var(--cyan);
-  text-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
-  /* Esquinas chaflanadas tipo botón arcade. */
+  font-size: 20px;
   border-radius: 10px;
-}
-.touch-dpad-btn.up {
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-}
-.touch-dpad-btn.down {
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-}
-.touch-dpad-btn.left {
-  border-top-left-radius: 20px;
-  border-bottom-left-radius: 20px;
-}
-.touch-dpad-btn.right {
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
 }
 .touch-dpad-btn[data-pressed="true"] {
   border-color: var(--cyan);
-  background: rgba(0, 245, 255, 0.18);
+  background: rgba(0, 245, 255, 0.2);
   box-shadow:
-    0 0 14px rgba(0, 245, 255, 0.7),
-    inset 0 0 14px rgba(0, 245, 255, 0.4);
-  transform: scale(0.95);
+    0 0 10px rgba(0, 245, 255, 0.6),
+    inset 0 0 10px rgba(0, 245, 255, 0.35);
+  transform: scale(0.94);
 }
 .touch-dpad-btn:focus-visible {
   outline: 2px solid var(--cyan);
@@ -2396,20 +2368,28 @@ a {
   display: inline-block;
 }
 .touch-dpad-core {
+  /* Pequeña palanca cian al centro de la cruz, puramente decorativa. */
+  position: relative;
+}
+.touch-dpad-core::before {
+  content: "";
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(0, 245, 255, 0.25) 0%,
-    rgba(0, 245, 255, 0.08) 60%,
+    rgba(0, 245, 255, 0.55) 0%,
+    rgba(0, 245, 255, 0.15) 60%,
     transparent 100%
   );
-  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
 }
 .touch-actions {
   position: absolute;
-  right: calc(12px + env(safe-area-inset-right, 0px));
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   display: flex;
-  gap: 14px;
+  gap: 10px;
   align-items: flex-end;
   pointer-events: none;
 }
@@ -2417,60 +2397,44 @@ a {
   width: var(--action-size);
   height: var(--action-size);
   border-radius: 50%;
-  color: var(--cyan);
-  font-size: 12px;
-  text-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
-  box-shadow:
-    0 0 0 2px rgba(0, 245, 255, 0.2),
-    inset 0 0 16px rgba(0, 245, 255, 0.1);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  font-size: 11px;
 }
 .touch-action-btn.primary {
   color: var(--magenta);
-  border-color: rgba(255, 0, 110, 0.45);
-  text-shadow: 0 0 8px rgba(255, 0, 110, 0.55);
-  box-shadow:
-    0 0 0 2px rgba(255, 0, 110, 0.25),
-    inset 0 0 16px rgba(255, 0, 110, 0.14);
+  border-color: rgba(255, 0, 110, 0.5);
+  text-shadow: 0 0 6px rgba(255, 0, 110, 0.55);
 }
 .touch-action-btn[data-pressed="true"] {
   border-color: var(--cyan);
-  background: rgba(0, 245, 255, 0.2);
+  background: rgba(0, 245, 255, 0.22);
   box-shadow:
-    0 0 20px rgba(0, 245, 255, 0.75),
-    inset 0 0 16px rgba(0, 245, 255, 0.45);
-  transform: scale(0.94);
+    0 0 14px rgba(0, 245, 255, 0.65),
+    inset 0 0 12px rgba(0, 245, 255, 0.4);
+  transform: scale(0.93);
 }
 .touch-action-btn.primary[data-pressed="true"] {
   border-color: var(--magenta);
   background: rgba(255, 0, 110, 0.22);
   box-shadow:
-    0 0 20px rgba(255, 0, 110, 0.8),
-    inset 0 0 16px rgba(255, 0, 110, 0.5);
+    0 0 14px rgba(255, 0, 110, 0.7),
+    inset 0 0 12px rgba(255, 0, 110, 0.45);
 }
 .touch-action-btn:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
 .touch-action-label {
-  font-size: 11px;
-  letter-spacing: 0.14em;
+  font-size: 10px;
+  letter-spacing: 0.1em;
 }
 /* Landscape apretado: compacta un pelín los elementos para no tapar el canvas. */
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
   .touch-overlay {
-    --dpad-cell: 54px;
-    --action-size: 68px;
+    --dpad-cell: 42px;
+    --action-size: 56px;
   }
   .touch-dpad-btn {
-    font-size: 22px;
-  }
-  .touch-action-btn {
-    font-size: 11px;
-  }
-  .touch-action-label {
-    font-size: 10px;
+    font-size: 18px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

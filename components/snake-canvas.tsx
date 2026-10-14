@@ -66,28 +66,23 @@ export function SnakeCanvas({ ref, skin = DEFAULT_SKIN, ...callbacks }: Props) {
     />
   );
 }
-/** Leyenda de teclas bajo la pantalla; en dispositivos táctiles avisa de que hace falta teclado. */
+/** Leyenda de teclas bajo la pantalla (solo informativa; en móvil se usa el overlay táctil). */
 export function SnakeControls() {
   return (
-    <>
-      <ul className="controls-legend" aria-label="Controles">
-        <li>
-          <kbd>←</kbd>
-          <kbd>↑</kbd>
-          <kbd>→</kbd>
-          <kbd>↓</kbd> o <kbd>W</kbd>
-          <kbd>A</kbd>
-          <kbd>S</kbd>
-          <kbd>D</kbd> Girar
-        </li>
-        <li>
-          <kbd>P</kbd>
-          <kbd>Esc</kbd> Pausa
-        </li>
-      </ul>
-      <p className="keys-notice" role="note">
-        Este juego necesita teclado.
-      </p>
-    </>
+    <ul className="controls-legend" aria-label="Controles">
+      <li>
+        <kbd>←</kbd>
+        <kbd>↑</kbd>
+        <kbd>→</kbd>
+        <kbd>↓</kbd> o <kbd>W</kbd>
+        <kbd>A</kbd>
+        <kbd>S</kbd>
+        <kbd>D</kbd> Girar
+      </li>
+      <li>
+        <kbd>P</kbd>
+        <kbd>Esc</kbd> Pausa
+      </li>
+    </ul>
   );
 }

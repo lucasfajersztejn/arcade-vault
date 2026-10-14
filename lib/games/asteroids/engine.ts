@@ -350,6 +350,10 @@ export function createAsteroids(
   window.addEventListener("blur", onAutoPause);
   document.addEventListener("visibilitychange", onVisibility);
   initGame();
+  // Pinta el estado inicial de forma síncrona: si Chrome Android cancela el
+  // primer `requestAnimationFrame` (p. ej. por la barra de direcciones que se
+  // colapsa justo al cargar), el canvas no se queda en negro.
+  draw();
   startLoop();
   return { pause, resume, restart, end, destroy, setPalette, setInput };
 }

@@ -317,6 +317,9 @@ export function createCaida(
   window.addEventListener("blur", onAutoPause);
   document.addEventListener("visibilitychange", onVisibility);
   initGame();
+  // Pinta el estado inicial de forma síncrona: si Chrome Android cancela el
+  // primer `requestAnimationFrame`, el tablero no queda en negro.
+  draw();
   startLoop();
   return { pause, resume, restart, end, setPalette, destroy, setInput };
 }

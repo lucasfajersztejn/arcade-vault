@@ -74,25 +74,20 @@ export function AsteroidsCanvas({
     />
   );
 }
-/** Leyenda de teclas bajo la pantalla; en dispositivos táctiles avisa de que hace falta teclado. */
+/** Leyenda de teclas bajo la pantalla (solo informativa; en móvil se usa el overlay táctil). */
 export function AsteroidsControls() {
   return (
-    <>
-      <ul className="controls-legend" aria-label="Controles">
-        <li>
-          <kbd>←</kbd>
-          <kbd>→</kbd> Rotar
-        </li>
-        <li>
-          <kbd>↑</kbd> Propulsar
-        </li>
-        <li>
-          <kbd>Espacio</kbd> Disparar
-        </li>
-      </ul>
-      <p className="keys-notice" role="note">
-        Este juego necesita teclado.
-      </p>
-    </>
+    <ul className="controls-legend" aria-label="Controles">
+      <li>
+        <kbd>←</kbd>
+        <kbd>→</kbd> Rotar
+      </li>
+      <li>
+        <kbd>↑</kbd> Propulsar
+      </li>
+      <li>
+        <kbd>Espacio</kbd> Disparar
+      </li>
+    </ul>
   );
 }

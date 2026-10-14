@@ -143,11 +143,7 @@ export function CaidaCanvas({ ref, skin = DEFAULT_SKIN, ...callbacks }: Props) {
     </div>
   );
 }
-/** La leyenda de teclas ya va en el panel interior; aquí solo el aviso para dispositivos táctiles. */
+/** La leyenda de teclas ya va en el panel interior; en móvil el overlay táctil cubre el input. */
 export function CaidaControls() {
-  return (
-    <p className="keys-notice" role="note">
-      Este juego necesita teclado.
-    </p>
-  );
+  return null;
 }
