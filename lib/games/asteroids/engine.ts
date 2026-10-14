@@ -53,6 +53,7 @@ export function createAsteroids(
       end: noop,
       destroy: noop,
       setPalette: () => {},
+      setInput: () => {},
     };
   }
   let palette: AsteroidsPalette = options.palette ?? SKINS.clasico;
@@ -260,6 +261,25 @@ export function createAsteroids(
     // Repinta en vivo: también en pausa o game over (sin tocar el estado).
     draw();
   }
+  // Las acciones táctiles escriben en el mismo `keys`/`justPressed` que usa el
+  // bucle para el teclado, para no duplicar lógica.
+  const TOUCH_TO_CODE: Record<string, string> = {
+    "rot-left": "ArrowLeft",
+    "rot-right": "ArrowRight",
+    thrust: "ArrowUp",
+    shoot: "Space",
+  };
+  function setInput(action: string, pressed: boolean) {
+    const code = TOUCH_TO_CODE[action];
+    if (!code) return;
+    if (pressed) {
+      if (!accepting()) return;
+      if (!keys[code]) justPressed[code] = true;
+      keys[code] = true;
+    } else {
+      keys[code] = false;
+    }
+  }
   // ── Bucle principal ─────────────────────────────────────────────────────────
   function frame(ts: number) {
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, MAX_DT);
@@ -330,6 +350,10 @@ export function createAsteroids(
   window.addEventListener("blur", onAutoPause);
   document.addEventListener("visibilitychange", onVisibility);
   initGame();
+  // Pinta el estado inicial de forma síncrona: si Chrome Android cancela el
+  // primer `requestAnimationFrame` (p. ej. por la barra de direcciones que se
+  // colapsa justo al cargar), el canvas no se queda en negro.
+  draw();
   startLoop();
-  return { pause, resume, restart, end, destroy, setPalette };
+  return { pause, resume, restart, end, destroy, setPalette, setInput };
 }

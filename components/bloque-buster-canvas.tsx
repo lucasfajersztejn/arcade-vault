@@ -9,7 +9,7 @@ import type {
 import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
 export type BloqueBusterHandle = Pick<
   BloqueBusterEngine,
-  "pause" | "resume" | "restart" | "end"
+  "pause" | "resume" | "restart" | "end" | "setInput"
 >;
 type Props = BloqueBusterCallbacks & {
   ref?: Ref<BloqueBusterHandle>;
@@ -61,6 +61,8 @@ export function BloqueBusterCanvas({
       resume: () => engineRef.current?.resume(),
       restart: () => engineRef.current?.restart(),
       end: () => engineRef.current?.end(),
+      setInput: (action, pressed) =>
+        engineRef.current?.setInput(action, pressed),
     }),
     [],
   );
@@ -73,23 +75,18 @@ export function BloqueBusterCanvas({
     />
   );
 }
-/** Leyenda de teclas bajo la pantalla; en dispositivos táctiles avisa de que hace falta teclado. */
+/** Leyenda de teclas bajo la pantalla (solo informativa; en móvil se usa el overlay táctil). */
 export function BloqueBusterControls() {
   return (
-    <>
-      <ul className="controls-legend" aria-label="Controles">
-        <li>
-          <kbd>←</kbd>
-          <kbd>→</kbd> Mover pala
-        </li>
-        <li>
-          <kbd>P</kbd>
-          <kbd>Esc</kbd> Pausa
-        </li>
-      </ul>
-      <p className="keys-notice" role="note">
-        Este juego necesita teclado.
-      </p>
-    </>
+    <ul className="controls-legend" aria-label="Controles">
+      <li>
+        <kbd>←</kbd>
+        <kbd>→</kbd> Mover pala
+      </li>
+      <li>
+        <kbd>P</kbd>
+        <kbd>Esc</kbd> Pausa
+      </li>
+    </ul>
   );
 }

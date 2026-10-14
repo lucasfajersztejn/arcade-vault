@@ -906,6 +906,13 @@ a {
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
+.hud-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .hud-stat {
   display: flex;
   flex-direction: column;
@@ -1625,6 +1632,146 @@ a {
     padding: 0 16px 32px;
   }
 }
+/* HUD del player compactado en móvil: todo dentro del contenedor sin desbordar. */
+@media (max-width: 768px) {
+  .player-hud {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 10px;
+    margin-bottom: 0;
+  }
+  .hud-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px 10px;
+    width: 100%;
+  }
+  .hud-stat {
+    min-width: 0;
+    gap: 1px;
+  }
+  .hud-stat .l {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .hud-stat .v {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hud-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+  .hud-actions .btn,
+  .hud-actions .hud-skin {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px 6px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  /* Si existe el selector de skin, ocupa su propia fila por encima de los botones. */
+  .hud-actions:has(.hud-skin) .hud-skin {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+/* Layout «app»: todo (HUD + CRT + gamepad) entra en la ventana del móvil sin
+   scroll. El CRT ocupa el espacio sobrante y el canvas se escala para caber. */
+@media (max-width: 768px) {
+  .av-player {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 6px 10px 10px;
+    margin: 0 auto;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .crt {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 18px;
+  }
+  .crt-screen {
+    flex: 1 1 auto;
+    min-height: 0;
+    /* El aspect-ratio deja de forzar altura: el flex-1 controla el espacio. */
+    aspect-ratio: auto;
+  }
+  .crt-bottom {
+    flex: 0 0 auto;
+    margin-top: 8px;
+    font-size: 7px;
+    letter-spacing: 0.12em;
+  }
+  /* Los canvas con dimensiones fijas se escalan dentro del hueco disponible,
+     respetando su proporción. */
+  .asteroids-canvas,
+  .bloque-buster-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .snake-canvas {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-inline: auto;
+  }
+  .crt-screen:has(> .snake-canvas) {
+    aspect-ratio: auto;
+  }
+  /* Caída: solo tablero en móvil (puntuación y nivel ya están en el HUD de
+     arriba; LINES, NEXT y la leyenda de teclas se ocultan para dejar sitio).
+     El tablero mantiene el aspect-ratio 1:2 y se escala al mínimo entre alto
+     disponible y ancho × 2. */
+  .caida-stage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    padding: 6px;
+    height: 100%;
+    min-height: 0;
+  }
+  .caida-board {
+    display: block;
+    flex: 0 0 auto;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 2;
+    min-width: 0;
+  }
+  .caida-panel {
+    display: none;
+  }
+  /* La leyenda de teclas estorba en móvil: el gamepad ya cubre la entrada. */
+  .controls-legend {
+    display: none;
+  }
+  .touch-overlay {
+    margin: 0;
+    flex: 0 0 auto;
+  }
+}
 /* misc */
 .divider {
   height: 1px;
@@ -2218,4 +2365,176 @@ a {
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+/* ===== TOUCH OVERLAY (SPEC 11) =====
+   Gamepad táctil como banda bajo el marco CRT: D-pad arcade a la izquierda,
+   botones de acción a la derecha. Solo activo en dispositivos táctiles o
+   viewport ≤ 768 px; en escritorio nunca aparece. */
+.touch-overlay {
+  --dpad-cell: 52px;
+  --action-size: 68px;
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin: 14px 0 4px;
+  padding: 12px;
+  padding-left: calc(12px + env(safe-area-inset-left, 0px));
+  padding-right: calc(12px + env(safe-area-inset-right, 0px));
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(
+      120% 100% at 50% 0%,
+      rgba(0, 245, 255, 0.06),
+      transparent 70%
+    ),
+    rgba(10, 10, 15, 0.65);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 2px rgba(0, 245, 255, 0.12),
+    inset 0 0 20px rgba(0, 245, 255, 0.05);
+}
+@media (pointer: coarse), (max-width: 768px) {
+  .touch-overlay {
+    display: flex;
+  }
+}
+.touch-dpad {
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  gap: 4px;
+}
+.touch-dpad-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+.touch-dpad-btn,
+.touch-action-btn {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  font-family: var(--pixel);
+  color: var(--cyan);
+  border: 1px solid rgba(0, 245, 255, 0.45);
+  background: rgba(15, 15, 25, 0.85);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(0, 245, 255, 0.55);
+  transition:
+    transform 80ms ease-out,
+    box-shadow 80ms ease-out,
+    color 80ms ease-out,
+    border-color 80ms ease-out,
+    background 80ms ease-out;
+}
+.touch-dpad-btn {
+  width: var(--dpad-cell);
+  height: var(--dpad-cell);
+  font-size: 20px;
+  border-radius: 10px;
+}
+.touch-dpad-btn[data-pressed="true"] {
+  border-color: var(--cyan);
+  background: rgba(0, 245, 255, 0.2);
+  box-shadow:
+    0 0 10px rgba(0, 245, 255, 0.6),
+    inset 0 0 10px rgba(0, 245, 255, 0.35);
+  transform: scale(0.94);
+}
+.touch-dpad-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.touch-dpad-spacer,
+.touch-dpad-core {
+  width: var(--dpad-cell);
+  height: var(--dpad-cell);
+  display: inline-block;
+}
+.touch-dpad-core {
+  /* Pequeña palanca cian al centro de la cruz, puramente decorativa. */
+  position: relative;
+}
+.touch-dpad-core::before {
+  content: "";
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 245, 255, 0.55) 0%,
+    rgba(0, 245, 255, 0.15) 60%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
+}
+.touch-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+/* Snake no tiene botones de acción: deja la columna derecha vacía para equilibrar. */
+.touch-overlay:not(:has(.touch-actions)) .touch-dpad {
+  margin: 0 auto;
+}
+.touch-action-btn {
+  width: var(--action-size);
+  height: var(--action-size);
+  border-radius: 50%;
+  font-size: 11px;
+}
+.touch-action-btn.primary {
+  color: var(--magenta);
+  border-color: rgba(255, 0, 110, 0.5);
+  text-shadow: 0 0 6px rgba(255, 0, 110, 0.55);
+}
+.touch-action-btn[data-pressed="true"] {
+  border-color: var(--cyan);
+  background: rgba(0, 245, 255, 0.22);
+  box-shadow:
+    0 0 14px rgba(0, 245, 255, 0.65),
+    inset 0 0 12px rgba(0, 245, 255, 0.4);
+  transform: scale(0.93);
+}
+.touch-action-btn.primary[data-pressed="true"] {
+  border-color: var(--magenta);
+  background: rgba(255, 0, 110, 0.22);
+  box-shadow:
+    0 0 14px rgba(255, 0, 110, 0.7),
+    inset 0 0 12px rgba(255, 0, 110, 0.45);
+}
+.touch-action-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.touch-action-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+/* Landscape apretado: compacta un pelín los elementos para no empujar el CRT. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  .touch-overlay {
+    --dpad-cell: 44px;
+    --action-size: 58px;
+    margin: 8px 0 0;
+    padding: 8px;
+  }
+  .touch-dpad-btn {
+    font-size: 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .touch-dpad-btn,
+  .touch-action-btn {
+    transition: none;
+  }
+  .touch-dpad-btn[data-pressed="true"],
+  .touch-action-btn[data-pressed="true"] {
+    transform: none;
+  }
 }
