@@ -1637,26 +1637,26 @@ a {
   .player-hud {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
-    padding: 12px;
-    margin-bottom: 12px;
+    gap: 6px;
+    padding: 8px 10px;
+    margin-bottom: 0;
   }
   .hud-stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px 12px;
+    gap: 4px 10px;
     width: 100%;
   }
   .hud-stat {
     min-width: 0;
-    gap: 2px;
+    gap: 1px;
   }
   .hud-stat .l {
     font-size: 9px;
     letter-spacing: 0.1em;
   }
   .hud-stat .v {
-    font-size: 13px;
+    font-size: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1671,10 +1671,10 @@ a {
   .hud-actions .hud-skin {
     width: 100%;
     min-width: 0;
-    min-height: 44px;
-    padding: 10px 8px;
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    min-height: 40px;
+    padding: 8px 6px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
     text-align: center;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -1684,6 +1684,92 @@ a {
   .hud-actions:has(.hud-skin) .hud-skin {
     grid-column: 1 / -1;
     order: -1;
+  }
+}
+/* Layout «app»: todo (HUD + CRT + gamepad) entra en la ventana del móvil sin
+   scroll. El CRT ocupa el espacio sobrante y el canvas se escala para caber. */
+@media (max-width: 768px) {
+  .av-player {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 6px 10px 10px;
+    margin: 0 auto;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .crt {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 18px;
+  }
+  .crt-screen {
+    flex: 1 1 auto;
+    min-height: 0;
+    /* El aspect-ratio deja de forzar altura: el flex-1 controla el espacio. */
+    aspect-ratio: auto;
+  }
+  .crt-bottom {
+    flex: 0 0 auto;
+    margin-top: 8px;
+    font-size: 7px;
+    letter-spacing: 0.12em;
+  }
+  /* Los canvas con dimensiones fijas se escalan dentro del hueco disponible,
+     respetando su proporción. */
+  .asteroids-canvas,
+  .bloque-buster-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .snake-canvas {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-inline: auto;
+  }
+  .crt-screen:has(> .snake-canvas) {
+    aspect-ratio: auto;
+  }
+  /* Caída: solo tablero en móvil (puntuación y nivel ya están en el HUD de
+     arriba; LINES, NEXT y la leyenda de teclas se ocultan para dejar sitio).
+     El tablero mantiene el aspect-ratio 1:2 y se escala al mínimo entre alto
+     disponible y ancho × 2. */
+  .caida-stage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    padding: 6px;
+    height: 100%;
+    min-height: 0;
+  }
+  .caida-board {
+    display: block;
+    flex: 0 0 auto;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 2;
+    min-width: 0;
+  }
+  .caida-panel {
+    display: none;
+  }
+  /* La leyenda de teclas estorba en móvil: el gamepad ya cubre la entrada. */
+  .controls-legend {
+    display: none;
+  }
+  .touch-overlay {
+    margin: 0;
+    flex: 0 0 auto;
   }
 }
 /* misc */
