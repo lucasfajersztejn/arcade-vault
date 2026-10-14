@@ -1,3 +1,8 @@
+import type { SnakePalette } from "./skins";
+export type SnakeOptions = {
+  /** Paleta inicial. Si falta, el motor usa la skin `clasico`. */
+  palette?: SnakePalette;
+};
 export type SnakeCallbacks = {
   onScore: (score: number) => void;
   /** Nivel del juego: 1 + floor(frutas / 5). */
@@ -16,4 +21,6 @@ export type SnakeEngine = {
   end: () => void;
   /** Cancela el bucle y quita todos los listeners. */
   destroy: () => void;
+  /** Cambia la paleta de color en caliente; repinta aun en pausa o game over. */
+  setPalette: (palette: SnakePalette) => void;
 };

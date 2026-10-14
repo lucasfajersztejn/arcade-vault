@@ -1,30 +1,44 @@
 "use client";
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
-import { createSnake } from "@/lib/games/snake/engine";
-import type { SnakeCallbacks, SnakeEngine } from "@/lib/games/snake/types";
 import { SIZE } from "@/lib/games/snake/constants";
+import { createSnake } from "@/lib/games/snake/engine";
+import { SKINS } from "@/lib/games/snake/skins";
+import type { SnakeCallbacks, SnakeEngine } from "@/lib/games/snake/types";
+import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
 export type SnakeHandle = Pick<
   SnakeEngine,
   "pause" | "resume" | "restart" | "end"
 >;
-type Props = SnakeCallbacks & { ref?: Ref<SnakeHandle> };
-export function SnakeCanvas({ ref, ...callbacks }: Props) {
+type Props = SnakeCallbacks & { ref?: Ref<SnakeHandle>; skin?: SkinId };
+export function SnakeCanvas({ ref, skin = DEFAULT_SKIN, ...callbacks }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<SnakeEngine | null>(null);
   const callbacksRef = useRef<SnakeCallbacks>(callbacks);
+  const skinRef = useRef(skin);
   // El motor se crea una sola vez; los callbacks se leen siempre en su última versión.
   useEffect(() => {
     callbacksRef.current = callbacks;
   });
   useEffect(() => {
+    skinRef.current = skin;
+  });
+  // La paleta cambia en vivo sin recrear el motor (igual que los callbacks).
+  useEffect(() => {
+    engineRef.current?.setPalette(SKINS[skin]);
+  }, [skin]);
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const engine = createSnake(canvas, {
-      onScore: (v) => callbacksRef.current.onScore(v),
-      onLevel: (v) => callbacksRef.current.onLevel(v),
-      onGameOver: (v) => callbacksRef.current.onGameOver(v),
-      onPause: (v) => callbacksRef.current.onPause?.(v),
-    });
+    const engine = createSnake(
+      canvas,
+      {
+        onScore: (v) => callbacksRef.current.onScore(v),
+        onLevel: (v) => callbacksRef.current.onLevel(v),
+        onGameOver: (v) => callbacksRef.current.onGameOver(v),
+        onPause: (v) => callbacksRef.current.onPause?.(v),
+      },
+      { palette: SKINS[skinRef.current] },
+    );
     engineRef.current = engine;
     return () => {
       engine.destroy();

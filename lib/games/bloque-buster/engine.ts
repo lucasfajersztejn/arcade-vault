@@ -27,8 +27,15 @@ import {
   type Paddle,
 } from "./entities";
 import { LEVELS } from "./levels";
+import { DEFAULT_SKIN } from "@/lib/games/skins";
+import { SKINS, type BloqueBusterPalette } from "./skins";
 import { loadSpritesheet } from "./sprites";
-import type { BloqueBusterCallbacks, BloqueBusterEngine } from "./types";
+import { clearTintCache } from "./tint";
+import type {
+  BloqueBusterCallbacks,
+  BloqueBusterEngine,
+  BloqueBusterOptions,
+} from "./types";
 type State = "playing" | "gameover";
 /** Flechas: el juego las consume (y evita su comportamiento por defecto, el scroll). */
 const MOVE_KEYS = new Set(["ArrowLeft", "ArrowRight"]);
@@ -44,6 +51,7 @@ function isInteractive(target: EventTarget | null) {
 export function createBloqueBuster(
   canvas: HTMLCanvasElement,
   callbacks: BloqueBusterCallbacks,
+  options: BloqueBusterOptions = {},
 ): BloqueBusterEngine {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -54,6 +62,7 @@ export function createBloqueBuster(
       restart: noop,
       end: noop,
       destroy: noop,
+      setPalette: () => {},
     };
   }
   canvas.width = W;
@@ -80,6 +89,8 @@ export function createBloqueBuster(
   let running = false;
   let rafId = 0;
   let lastTime: number | null = null;
+  /** Paleta activa; cambia en vivo con `setPalette` sin tocar el estado del juego. */
+  let palette: BloqueBusterPalette = options.palette ?? SKINS[DEFAULT_SKIN];
   const emitScore = () => callbacks.onScore(Math.min(score, MAX_SCORE));
   function loadLevel(n: number) {
     level = n;
@@ -157,13 +168,13 @@ export function createBloqueBuster(
   // ── Draw ────────────────────────────────────────────────────────────────────
   function draw() {
     if (!ctx) return;
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, W, H);
     if (!sheet) return;
-    drawBlocks(ctx, sheet, blocks);
-    drawExplosions(ctx, sheet, explosions);
-    drawPaddle(ctx, sheet, paddle);
-    drawBall(ctx, sheet, ball);
+    drawBlocks(ctx, sheet, blocks, palette);
+    drawExplosions(ctx, sheet, explosions, palette);
+    drawPaddle(ctx, sheet, paddle, palette);
+    drawBall(ctx, sheet, ball, palette);
   }
   // ── Bucle principal ─────────────────────────────────────────────────────────
   function frame(ts: number) {
@@ -209,6 +220,12 @@ export function createBloqueBuster(
     if (destroyed || state === "gameover") return;
     gameOver();
     paused = false;
+    draw();
+  }
+  /** Cambia la paleta y repinta sin tocar score, vidas, nivel ni posiciones. */
+  function setPalette(p: BloqueBusterPalette) {
+    palette = p;
+    clearTintCache();
     draw();
   }
   function togglePause() {
@@ -270,5 +287,5 @@ export function createBloqueBuster(
     .catch((err) => {
       if (!destroyed) console.error(err);
     });
-  return { pause, resume, restart, end, destroy };
+  return { pause, resume, restart, end, destroy, setPalette };
 }

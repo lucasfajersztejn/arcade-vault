@@ -59,11 +59,13 @@ export const ENGINES: Record<string, EngineEntry> = {
     Controls: BloqueBusterControls,
     hasLives: true,
     ariaLabel: "Juego Arkanoid en curso",
+    skins: SKIN_IDS,
   },
   snake: {
     Canvas: SnakeCanvas,
     Controls: SnakeControls,
     hasLives: false,
     ariaLabel: "Juego Snake en curso",
+    skins: SKIN_IDS,
   },
 };
