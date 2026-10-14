@@ -754,6 +754,25 @@ a {
   image-rendering: pixelated;
   filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.45));
 }
+.cover-frogger {
+  background: linear-gradient(
+    180deg,
+    #0a1f14 0 10%,
+    #06183a 10% 40%,
+    #0d2818 40% 50%,
+    #101014 50% 90%,
+    #0d2818 90% 100%
+  );
+}
+.cover-frogger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 100' preserveAspectRatio='xMidYMid slice' shape-rendering='crispEdges'%3E%3Cg fill='none' stroke='%23d9a520' stroke-width='1.5'%3E%3Crect x='14' y='1.5' width='30' height='7'/%3E%3Crect x='65' y='1.5' width='30' height='7'/%3E%3Crect x='116' y='1.5' width='30' height='7'/%3E%3C/g%3E%3Cg fill='%237a4a24'%3E%3Crect x='8' y='15' width='46' height='9'/%3E%3Crect x='104' y='15' width='42' height='9'/%3E%3Crect x='52' y='28' width='52' height='9'/%3E%3C/g%3E%3Cg stroke='%235d3519' stroke-width='1.5'%3E%3Cpath d='M24 16v7M40 16v7M118 16v7M132 16v7M68 29v7M86 29v7'/%3E%3C/g%3E%3Cg fill='%232fbf6a'%3E%3Ccircle cx='16' cy='32' r='5'/%3E%3Ccircle cx='28' cy='32' r='5'/%3E%3Ccircle cx='40' cy='32' r='5'/%3E%3C/g%3E%3Cg stroke='%233a3a42' stroke-width='1' stroke-dasharray='6 7'%3E%3Cpath d='M0 63h160M0 76h160'/%3E%3C/g%3E%3Crect x='16' y='53' width='28' height='8' fill='%23ff3b30'/%3E%3Crect x='36' y='55' width='7' height='4' fill='%230b1220'/%3E%3Crect x='100' y='66' width='44' height='9' fill='%23b8bdc7'/%3E%3Crect x='100' y='66' width='13' height='9' fill='%236b7280'/%3E%3Crect x='30' y='79' width='28' height='8' fill='%232f8fff'/%3E%3Crect x='50' y='81' width='7' height='4' fill='%230b1220'/%3E%3Cg fill='%2339e65c'%3E%3Crect x='74' y='36' width='6' height='6'/%3E%3Crect x='86' y='36' width='6' height='6'/%3E%3Crect x='68' y='42' width='30' height='9'/%3E%3Crect x='74' y='51' width='6' height='5'/%3E%3Crect x='86' y='51' width='6' height='5'/%3E%3Crect x='62' y='44' width='6' height='4'/%3E%3Crect x='98' y='44' width='6' height='4'/%3E%3C/g%3E%3Crect x='76' y='45' width='14' height='4' fill='%239cf7a8'/%3E%3Cg fill='%23ffffff'%3E%3Crect x='75' y='37' width='4' height='4'/%3E%3Crect x='87' y='37' width='4' height='4'/%3E%3C/g%3E%3Cg fill='%230a0a0a'%3E%3Crect x='76' y='38' width='2' height='2'/%3E%3Crect x='88' y='38' width='2' height='2'/%3E%3C/g%3E%3C/svg%3E")
+    center / cover no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 4px rgba(57, 230, 92, 0.45));
+}
 /* ===== detail screen ===== */
 .av-detail {
   display: grid;
@@ -1037,6 +1056,16 @@ a {
   .crt-screen:has(> .snake-canvas) {
     aspect-ratio: 1 / 1;
   }
+}
+/* frogger: tablero vertical 8:7 (640x560) centrado en la pantalla 4:3; en móvil la pantalla adopta su relación */
+.frogger-canvas {
+  display: block;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 8 / 7;
+  margin-inline: auto;
+  background: #000;
+  image-rendering: pixelated;
 }
 /* caida: Tetris real dentro del marco CRT. El panel lateral conserva el aspecto del original (solo tema oscuro). */
 .crt-screen:has(> .caida-stage) {
@@ -1692,8 +1721,11 @@ a {
   .av-player {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
-    max-height: 100dvh;
+    /* La navbar sticky (~68 px en móvil) queda por encima del player: si este
+       midiera 100dvh, el gamepad caería fuera de la ventana. */
+    --av-nav-h: 68px;
+    height: calc(100dvh - var(--av-nav-h));
+    max-height: calc(100dvh - var(--av-nav-h));
     padding: 6px 10px 10px;
     margin: 0 auto;
     gap: 8px;
@@ -1735,6 +1767,19 @@ a {
     margin-inline: auto;
   }
   .crt-screen:has(> .snake-canvas) {
+    aspect-ratio: auto;
+  }
+  /* Frogger: tablero 8:7 escalado al hueco libre; la pantalla no fuerza alto
+     para que HUD + CRT + gamepad entren en 100dvh sin scroll. */
+  .frogger-canvas {
+    width: 100%;
+    height: 100%;
+    /* `object-fit` conserva el 8:7 del tablero dentro del hueco disponible
+       sin forzar alto a la pantalla (que es flex-1 en este layout). */
+    aspect-ratio: auto;
+    object-fit: contain;
+  }
+  .crt-screen:has(> .frogger-canvas) {
     aspect-ratio: auto;
   }
   /* Caída: solo tablero en móvil (puntuación y nivel ya están en el HUD de

@@ -9,6 +9,7 @@ import {
   BloqueBusterControls,
 } from "@/components/bloque-buster-canvas";
 import { CaidaCanvas, CaidaControls } from "@/components/caida-canvas";
+import { FroggerCanvas, FroggerControls } from "@/components/frogger-canvas";
 import { SnakeCanvas, SnakeControls } from "@/components/snake-canvas";
 import { SKIN_IDS, type SkinId } from "@/lib/games/skins";
 /** Lo que `GamePlayer` puede pedirle a cualquier motor montado. */
@@ -98,6 +99,17 @@ export const ENGINES: Record<string, EngineEntry> = {
     touchActions: {
       dpad: { up: null, down: null, left: "left", right: "right" },
       buttons: { a: "launch", b: null },
+    },
+  },
+  frogger: {
+    Canvas: FroggerCanvas,
+    Controls: FroggerControls,
+    hasLives: true,
+    ariaLabel: "Juego Frogger en curso",
+    skins: SKIN_IDS,
+    touchActions: {
+      dpad: { up: "up", down: "down", left: "left", right: "right" },
+      buttons: { a: null, b: null },
     },
   },
   snake: {

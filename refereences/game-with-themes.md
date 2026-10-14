@@ -385,3 +385,96 @@ es fósforo cálido / apagado sobre casi negro.
   `const palette` tras un reformat; se corrigió a `let` ya que `setPalette` reasigna el valor.
 
 ---
+
+---
+
+## frogger (Frogger) — 2026-10-14
+
+Caso particular: el refactor del render a `Palette` ya venía hecho desde la propia spec del
+juego (rama `spec-01-frogger-core`). Esta pasada solo **diseñó** las paletas `neon` y `retro`
+(que eran placeholders apuntando al mismo objeto que `clasico`) y activó el selector.
+
+### Ficheros
+
+**Modificados**
+
+- `lib/games/frogger/skins.ts` — añadidas las paletas reales `neon` y `retro`; `clasico` se
+  dejó intacta byte a byte. `SKINS` deja de reutilizar el objeto `clasico` para las otras dos.
+- `lib/games/registry.ts` — la entrada `frogger` pasa a declarar `skins: SKIN_IDS` (antes no
+  la tenía, para no mostrar un selector con tres paletas idénticas).
+
+**Sin cambios (ya correctos)**
+
+- `lib/games/frogger/engine.ts` — `palette = options.palette ?? SKINS.clasico`, todo `draw()`
+  lee de `palette` (no queda ningún literal de color en el motor) y `setPalette(next)` asigna
+  y llama a `draw()` de inmediato, así que el cambio se ve aun en pausa y no toca estado,
+  vidas ni puntuación.
+- `components/frogger-canvas.tsx` — prop `skin` con default `DEFAULT_SKIN`, `useEffect([skin])`
+  que llama a `engineRef.current?.setPalette(SKINS[skin])`, y creación única del motor con
+  `{ palette: SKINS[skinRef.current] }`.
+- `components/game-player.tsx` — selector `.btn.hud-skin` genérico, ya existente.
+
+### Slots de la paleta (`FroggerPalette`)
+
+| slot | clasico | neon | retro |
+| --- | --- | --- | --- |
+| `safe` | `#0d2818` | `#120a1e` | `#141008` |
+| `road` | `#101014` | `#05050a` | `#0b0a07` |
+| `river` | `#06183a` | `#001a2e` | `#101a16` |
+| `goalRow` | `#0a1f14` | `#1a0a26` | `#12170d` |
+| `roadLine` | `#3a3a42` | `#00f5ff` | `#6b5a2a` |
+| `goalEmpty` | `#071b10` | `#0a0014` | `#0d1109` |
+| `goalBorder` | `#d9a520` | `#f5ff00` | `#c08b2a` |
+| `goalFilled` | `#1d5c33` | `#00ff88` | `#5a7a3a` |
+| `carBodies[0]` | `#ff3b30` | `#ff006e` | `#b5651d` |
+| `carBodies[1]` | `#f5d020` | `#f5ff00` | `#c9a227` |
+| `carBodies[2]` | `#2f8fff` | `#ff8a00` | `#7f8c5a` |
+| `carGlass` | `#0b1220` | `#05050a` | `#0b0a07` |
+| `truckBody` | `#b8bdc7` | `#e6f9ff` | `#cbbd9a` |
+| `truckCab` | `#6b7280` | `#00f5ff` | `#8a7f63` |
+| `wheel` | `#15151a` | `#1b0b2a` | `#0e0d0a` |
+| `log` | `#7a4a24` | `#7b2cbf` | `#6b4a24` |
+| `logGrain` | `#5d3519` | `#c77dff` | `#4a3217` |
+| `turtleShell` | `#2fbf6a` | `#00f5ff` | `#6e9456` |
+| `turtleShellEdge` | `#17753f` | `#0088a8` | `#3f5a30` |
+| `turtleHead` | `#48d97f` | `#aef7ff` | `#8fb46f` |
+| `turtleSubmerged` | `rgba(47, 191, 106, 0.22)` | `rgba(0, 245, 255, 0.28)` | `rgba(110, 148, 86, 0.22)` |
+| `frogBody` | `#39e65c` | `#00ff88` | `#7ea832` |
+| `frogBelly` | `#9cf7a8` | `#ccffe8` | `#c7d89a` |
+| `frogLeg` | `#22a63c` | `#00b35f` | `#4e6b22` |
+| `frogEye` | `#ffffff` | `#ffffff` | `#e8e2c8` |
+| `frogPupil` | `#0a0a0a` | `#12002b` | `#100e08` |
+| `timeTrack` | `rgba(255, 255, 255, 0.12)` | `rgba(0, 245, 255, 0.18)` | `rgba(232, 226, 200, 0.1)` |
+| `timeHigh` | `#39e65c` | `#00ff88` | `#7ea832` |
+| `timeMid` | `#f5d020` | `#f5ff00` | `#c9a227` |
+| `timeLow` | `#ff3b30` | `#ff006e` | `#b5431d` |
+
+### Decisiones de diseño
+
+- **Neón**: negro casi puro de base con los tokens de la plataforma. Las líneas de carril pasan
+  a cian (`--cyan`), los coches a magenta/amarillo/naranja, los troncos a violeta (`#7b2cbf`)
+  para que no se confundan con el río cian, y las tortugas a cian con casco claro. La rana se
+  queda verde (`--green #00ff88`), igual que la boca destino ocupada: el jugador y su objetivo
+  comparten color, que es la lectura clásica del juego.
+- **Retro**: fósforo cálido y desaturado sobre negro ámbar. Coches en tierras/ámbares, tronco
+  marrón apagado, rana y tortugas en verde CRT, cremas (`#e8e2c8`) para el ojo y la barra de
+  tiempo. Sin brillos (Frogger no usa `shadowColor` en ningún slot).
+- Las transparencias (`turtleSubmerged`, `timeTrack`) conservan su rol de opacidad en las tres
+  skins; solo cambia el tinte, nunca el alfa como mecanismo (la tortuga sumergida sigue
+  legible como contorno).
+
+### Verificación
+
+- `clasico` idéntico al original: el objeto `clasico` no se tocó y es la skin por defecto
+  (`DEFAULT_SKIN`), tanto en `createFrogger` (`options.palette ?? SKINS.clasico`) como en el
+  default de la prop `skin` del canvas.
+- Selector en vivo: `/games/frogger/jugar` renderiza el `<select class="btn hud-skin">` con
+  Clásico/Neón/Retro; `setPalette` repinta al instante sin tocar estado, ronda, vidas ni
+  puntuación (no se llama a `restart` ni a `initGame`).
+- `npm run lint` ✅ · `npm run build` ✅.
+
+### Pendiente / suposiciones
+
+- Sin regresiones esperadas en otros juegos: el único cambio compartido es aditivo
+  (`skins: SKIN_IDS` en la entrada `frogger`).
+- El commit/rama/PR los decide el usuario; esta pasada no commiteó nada.
