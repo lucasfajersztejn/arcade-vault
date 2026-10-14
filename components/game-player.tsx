@@ -234,13 +234,6 @@ export function GamePlayer({ game }: { game: Game }) {
               </div>
             </div>
           )}
-          {isTouch && engine.touchLayout && engine.touchActions && !over && (
-            <TouchControls
-              layout={engine.touchLayout}
-              actions={engine.touchActions}
-              onInput={handleTouchInput}
-            />
-          )}
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
@@ -248,6 +241,13 @@ export function GamePlayer({ game }: { game: Game }) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+      {isTouch && engine.touchLayout && engine.touchActions && !over && (
+        <TouchControls
+          layout={engine.touchLayout}
+          actions={engine.touchActions}
+          onInput={handleTouchInput}
+        />
+      )}
       <engine.Controls />
       {over && (
         <div className="modal-bd">
