@@ -108,6 +108,12 @@ export function createFrogger(
   /** Fila más alta alcanzada en la ronda: cada fila nueva puntúa una sola vez. */
   let highestRow = ROW_START;
   let pendingDir: Direction | null = null;
+  /**
+   * El reloj de la ronda no corre hasta el primer movimiento de la partida: cargar la
+   * página y leer los controles no debe costar las tres vidas. Una vez armado ya no se
+   * desarma, así que esperar en la orilla sigue siendo mortal.
+   */
+  let started = false;
   let state: "playing" | "gameover" = "playing";
   let paused = false;
   let destroyed = false;
@@ -135,6 +141,7 @@ export function createFrogger(
     lives = LIVES_START;
     state = "playing";
     elapsed = 0;
+    started = false;
     startRound(1);
     emitScore();
     callbacks.onLives(lives);
@@ -242,6 +249,7 @@ export function createFrogger(
     } else if (pendingDir) {
       const dir = pendingDir;
       pendingDir = null;
+      started = true;
       startJump(dir);
     }
     // Arrastre del río: la rana viaja con el tronco o las tortugas que la sostienen.
@@ -258,6 +266,7 @@ export function createFrogger(
     }
     checkDeath();
     if (state !== "playing") return;
+    if (!started) return;
     roundMs -= dtMs;
     if (roundMs <= 0) {
       roundMs = 0;
