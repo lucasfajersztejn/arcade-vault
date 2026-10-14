@@ -323,6 +323,15 @@ para las pasadas de skins y de móvil (`feat: add neon, retro and clasico skins 
 
 Mensaje final con:
 
+- **Rellena los criterios de aceptación en el fichero de la spec**: marca cada `- [ ]` como
+  `- [x]` y anota al lado qué se verificó y cómo. Usa cuatro estados para no mentir por
+  omisión — ✅ verificado en el navegador · 🔍 correcto por código pero no provocado en una
+  partida · ✏️ adaptado (di a qué y por qué) · ❌ no cumplido (di por qué y a qué spec se va).
+  Si una decisión del usuario retiró un criterio, táchalo con su motivo y la fecha en vez de
+  borrarlo. Añade al final una sección con lo implementado fuera del plan original (skins,
+  gamepad, scores de ejemplo, ajustes de jugabilidad). El cuerpo de la spec **no se reescribe**:
+  se le añade arriba una nota de implementación con las desviaciones, para que el diff sea
+  auditable;
 - rama activa (`spec-NN-slug`) y recordatorio de que **el estado de la spec lo pasa a
   `Implementado` el humano**, no tú;
 - checklist de las tres pasadas: spec ✅/❌, skins ✅/❌, móvil ✅/❌;
