@@ -31,25 +31,27 @@ export type EngineCanvasProps = {
   /** Skin de color activa. Un motor que aún no la soporte la ignora. */
   skin?: SkinId;
 };
-/** Layouts del overlay táctil que `TouchControls` sabe pintar. */
-export type TouchLayoutId =
-  | "dpad4"
-  | "dpad-horizontal"
-  | "asteroids"
-  | "caida"
-  | "bloque-buster"
-  | "snake";
-/** Direcciones del D-pad reconocidas por el framework. */
-export type TouchDpadDir = "up" | "down" | "left" | "right";
-/** Un botón de acción del overlay. `id` llega a `setInput`, `label` es la etiqueta visible. */
-export type TouchActionButton = {
-  id: string;
-  label: string;
+/**
+ * Acción asociada a una posición fija del gamepad MK-II.
+ * `null` significa que esa posición se pinta inerte: visible pero sin respuesta.
+ */
+export type TouchActionId = string | null;
+/** Mapeo del D-pad: cada flecha asignada a una acción (o inerte). */
+export type TouchDpadMap = {
+  up: TouchActionId;
+  down: TouchActionId;
+  left: TouchActionId;
+  right: TouchActionId;
 };
-/** Qué botones pinta el framework para un juego dado. */
+/** Botones circulares del gamepad: A (magenta) y B (cyan). */
+export type TouchButtons = {
+  a: TouchActionId;
+  b: TouchActionId;
+};
+/** Spec del gamepad para un juego. La silueta es fija; solo cambia qué slots están activos. */
 export type TouchSpec = {
-  dpad?: ReadonlyArray<TouchDpadDir>;
-  buttons?: ReadonlyArray<TouchActionButton>;
+  dpad: TouchDpadMap;
+  buttons: TouchButtons;
 };
 export type EngineEntry = {
   Canvas: ComponentType<EngineCanvasProps>;
@@ -60,9 +62,7 @@ export type EngineEntry = {
   ariaLabel: string;
   /** Skins de color que soporta el juego; ausente = solo `clasico` (sin selector). */
   skins?: SkinId[];
-  /** Si está presente, `GamePlayer` monta el overlay táctil en móvil. */
-  touchLayout?: TouchLayoutId;
-  /** Botones concretos a renderizar; interpretados por el componente del overlay. */
+  /** Si está presente, `GamePlayer` monta el gamepad MK-II en móvil/tablet. */
   touchActions?: TouchSpec;
 };
 /** Juegos con motor real, por `id`. Un juego del catálogo que no esté aquí no es jugable: `GamePlayer` muestra «JUEGO NO DISPONIBLE». */
@@ -73,11 +73,9 @@ export const ENGINES: Record<string, EngineEntry> = {
     hasLives: true,
     ariaLabel: "Juego Asteroids en curso",
     skins: SKIN_IDS,
-    touchLayout: "asteroids",
     touchActions: {
-      dpad: ["up", "left", "right"],
-      // El motor no implementa hiperespacio: el botón HIPER queda fuera.
-      buttons: [{ id: "shoot", label: "DISPARO" }],
+      dpad: { up: "thrust", down: null, left: "rot-left", right: "rot-right" },
+      buttons: { a: "shoot", b: "hyperspace" },
     },
   },
   caida: {
@@ -86,10 +84,9 @@ export const ENGINES: Record<string, EngineEntry> = {
     hasLives: false,
     ariaLabel: "Juego Tetris en curso",
     skins: SKIN_IDS,
-    touchLayout: "caida",
     touchActions: {
-      dpad: ["up", "down", "left", "right"],
-      buttons: [{ id: "drop", label: "DROP" }],
+      dpad: { up: null, down: "down", left: "left", right: "right" },
+      buttons: { a: "rotate", b: "drop" },
     },
   },
   "bloque-buster": {
@@ -98,11 +95,9 @@ export const ENGINES: Record<string, EngineEntry> = {
     hasLives: true,
     ariaLabel: "Juego Arkanoid en curso",
     skins: SKIN_IDS,
-    touchLayout: "bloque-buster",
     touchActions: {
-      // La bola arranca ya en movimiento (en el inicio y al perder una vida):
-      // no hay mecánica de pegado + lanzamiento, el botón LANZAR queda fuera.
-      dpad: ["left", "right"],
+      dpad: { up: null, down: null, left: "left", right: "right" },
+      buttons: { a: "launch", b: null },
     },
   },
   snake: {
@@ -111,9 +106,9 @@ export const ENGINES: Record<string, EngineEntry> = {
     hasLives: false,
     ariaLabel: "Juego Snake en curso",
     skins: SKIN_IDS,
-    touchLayout: "snake",
     touchActions: {
-      dpad: ["up", "down", "left", "right"],
+      dpad: { up: "up", down: "down", left: "left", right: "right" },
+      buttons: { a: null, b: null },
     },
   },
 };
