@@ -34,11 +34,11 @@ function subscribeSkin(callback: () => void) {
     window.removeEventListener(SKIN_CHANGE_EVENT, callback);
   };
 }
-/** `true` cuando el navegador tiene puntero coarse (táctil) o viewport ≤ 768 px. */
+/** `true` cuando el navegador tiene puntero coarse (táctil) o viewport ≤ 1024 px. */
 function useTouchViewport() {
   const [isTouch, setIsTouch] = useState(false);
   useEffect(() => {
-    const mql = window.matchMedia("(pointer: coarse), (max-width: 768px)");
+    const mql = window.matchMedia("(pointer: coarse), (max-width: 1024px)");
     const update = () => setIsTouch(mql.matches);
     update();
     mql.addEventListener("change", update);
@@ -241,12 +241,8 @@ export function GamePlayer({ game }: { game: Game }) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
-      {isTouch && engine.touchLayout && engine.touchActions && !over && (
-        <TouchControls
-          layout={engine.touchLayout}
-          actions={engine.touchActions}
-          onInput={handleTouchInput}
-        />
+      {isTouch && engine.touchActions && !over && (
+        <TouchControls spec={engine.touchActions} onInput={handleTouchInput} />
       )}
       <engine.Controls />
       {over && (
