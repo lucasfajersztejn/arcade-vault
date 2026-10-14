@@ -35,4 +35,6 @@ export type CaidaEngine = {
   setPalette: (palette: CaidaPalette) => void;
   /** Cancela el bucle y quita todos los listeners. */
   destroy: () => void;
+  /** Entrada táctil: cada pulsación equivale a una pulsación de tecla (edge). */
+  setInput: (action: string, pressed: boolean) => void;
 };

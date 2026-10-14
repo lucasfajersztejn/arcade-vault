@@ -23,4 +23,6 @@ export type SnakeEngine = {
   destroy: () => void;
   /** Cambia la paleta de color en caliente; repinta aun en pausa o game over. */
   setPalette: (palette: SnakePalette) => void;
+  /** Entrada táctil equivalente al teclado: edge (ignora `pressed = false`). */
+  setInput: (action: string, pressed: boolean) => void;
 };

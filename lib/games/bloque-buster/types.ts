@@ -25,4 +25,6 @@ export type BloqueBusterEngine = {
   destroy: () => void;
   /** Cambia la paleta en vivo y repinta sin tocar score, vidas, nivel ni posiciones. */
   setPalette: (palette: BloqueBusterPalette) => void;
+  /** Entrada táctil: `left`/`right` son hold (equivalen a mantener la flecha). */
+  setInput: (action: string, pressed: boolean) => void;
 };

@@ -74,10 +74,8 @@ export const ENGINES: Record<string, EngineEntry> = {
     touchLayout: "asteroids",
     touchActions: {
       dpad: ["up", "left", "right"],
-      buttons: [
-        { id: "shoot", label: "DISPARO" },
-        { id: "hyperspace", label: "HIPER" },
-      ],
+      // El motor no implementa hiperespacio: el botón HIPER queda fuera.
+      buttons: [{ id: "shoot", label: "DISPARO" }],
     },
   },
   caida: {
@@ -100,8 +98,9 @@ export const ENGINES: Record<string, EngineEntry> = {
     skins: SKIN_IDS,
     touchLayout: "bloque-buster",
     touchActions: {
+      // La bola arranca ya en movimiento (en el inicio y al perder una vida):
+      // no hay mecánica de pegado + lanzamiento, el botón LANZAR queda fuera.
       dpad: ["left", "right"],
-      buttons: [{ id: "launch", label: "LANZAR" }],
     },
   },
   snake: {

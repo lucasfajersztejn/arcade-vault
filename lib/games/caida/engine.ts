@@ -67,6 +67,7 @@ export function createCaida(
       end: noop,
       setPalette: noop,
       destroy: noop,
+      setInput: noop,
     };
   }
   canvas.width = COLS * BLOCK;
@@ -269,6 +270,32 @@ export function createCaida(
     draw();
     if (nextCtx) drawNext(nextCtx, next, palette);
   }
+  // Entrada táctil: cada acción equivale a una pulsación de tecla, por eso
+  // ignoramos `pressed = false` y disparamos la acción al `true`.
+  function setInput(action: string, pressed: boolean) {
+    if (!pressed) return;
+    if (!accepting()) return;
+    switch (action) {
+      case "left":
+        move(-1);
+        break;
+      case "right":
+        move(1);
+        break;
+      case "down":
+        softDrop();
+        break;
+      case "rotate":
+        tryRotate(board, current);
+        break;
+      case "drop":
+        hardDrop();
+        break;
+      default:
+        return;
+    }
+    if (isOver()) draw();
+  }
   function destroy() {
     if (destroyed) return;
     destroyed = true;
@@ -291,5 +318,5 @@ export function createCaida(
   document.addEventListener("visibilitychange", onVisibility);
   initGame();
   startLoop();
-  return { pause, resume, restart, end, setPalette, destroy };
+  return { pause, resume, restart, end, setPalette, destroy, setInput };
 }

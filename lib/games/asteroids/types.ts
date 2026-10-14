@@ -23,4 +23,6 @@ export type AsteroidsEngine = {
   destroy: () => void;
   /** Cambia la paleta de color en vivo (también en pausa / game over). */
   setPalette: (palette: AsteroidsPalette) => void;
+  /** Entrada táctil: `rot-left`/`rot-right`/`thrust` son hold, `shoot` es edge. */
+  setInput: (action: string, pressed: boolean) => void;
 };

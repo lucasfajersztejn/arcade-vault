@@ -63,6 +63,7 @@ export function createBloqueBuster(
       end: noop,
       destroy: noop,
       setPalette: () => {},
+      setInput: () => {},
     };
   }
   canvas.width = W;
@@ -262,6 +263,13 @@ export function createBloqueBuster(
     if (e.code === "ArrowLeft") keys.left = false;
     else if (e.code === "ArrowRight") keys.right = false;
   };
+  // El touch overlay escribe en el mismo `keys.left`/`keys.right` que usa el
+  // bucle para el teclado, para no duplicar la lógica de movimiento de la pala.
+  function setInput(action: string, pressed: boolean) {
+    if (pressed && (destroyed || paused || state === "gameover")) return;
+    if (action === "left") keys.left = pressed;
+    else if (action === "right") keys.right = pressed;
+  }
   function destroy() {
     if (destroyed) return;
     destroyed = true;
@@ -287,5 +295,5 @@ export function createBloqueBuster(
     .catch((err) => {
       if (!destroyed) console.error(err);
     });
-  return { pause, resume, restart, end, destroy, setPalette };
+  return { pause, resume, restart, end, destroy, setPalette, setInput };
 }

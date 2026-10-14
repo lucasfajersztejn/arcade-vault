@@ -55,6 +55,7 @@ export function createSnake(
       end: noop,
       destroy: noop,
       setPalette: noop,
+      setInput: noop,
     };
   }
   let palette: SnakePalette = options?.palette ?? SKINS.clasico;
@@ -258,6 +259,19 @@ export function createSnake(
     // Repinta aun en pausa / game over: cambiar skin no debe tocar el estado.
     draw();
   }
+  /** Entrada táctil: encola un giro al pulsar (edge), igual que una tecla. */
+  function setInput(action: string, pressed: boolean) {
+    if (!pressed) return;
+    if (destroyed || paused || state === "gameover") return;
+    if (
+      action === "up" ||
+      action === "down" ||
+      action === "left" ||
+      action === "right"
+    ) {
+      queue = queueTurn(queue, dir, action);
+    }
+  }
   function destroy() {
     if (destroyed) return;
     destroyed = true;
@@ -281,5 +295,5 @@ export function createSnake(
     .catch((err) => {
       if (!destroyed) console.error(err);
     });
-  return { pause, resume, restart, end, destroy, setPalette };
+  return { pause, resume, restart, end, destroy, setPalette, setInput };
 }
