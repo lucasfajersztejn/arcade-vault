@@ -20,7 +20,12 @@ import {
   Ship,
   type Keys,
 } from "./entities";
-import type { AsteroidsCallbacks, AsteroidsEngine } from "./types";
+import { SKINS, type AsteroidsPalette } from "./skins";
+import type {
+  AsteroidsCallbacks,
+  AsteroidsEngine,
+  AsteroidsOptions,
+} from "./types";
 import { dist, rand } from "./utils";
 type State = "playing" | "dead" | "gameover";
 /** Teclas que el juego consume (y cuyo comportamiento por defecto se evita). */
@@ -36,6 +41,7 @@ function isInteractive(target: EventTarget | null) {
 export function createAsteroids(
   canvas: HTMLCanvasElement,
   callbacks: AsteroidsCallbacks,
+  options: AsteroidsOptions = {},
 ): AsteroidsEngine {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -46,8 +52,10 @@ export function createAsteroids(
       restart: noop,
       end: noop,
       destroy: noop,
+      setPalette: () => {},
     };
   }
+  let palette: AsteroidsPalette = options.palette ?? SKINS.clasico;
   canvas.width = W;
   canvas.height = H;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -231,21 +239,26 @@ export function createAsteroids(
   // ── Draw ────────────────────────────────────────────────────────────────────
   function draw() {
     if (!ctx) return;
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, W, H);
-    particles.forEach((p) => p.draw(ctx));
-    asteroids.forEach((a) => a.draw(ctx));
-    powerUps.forEach((p) => p.draw(ctx, reducedMotion.matches));
-    bullets.forEach((b) => b.draw(ctx));
-    ship.draw(ctx);
+    particles.forEach((p) => p.draw(ctx, palette));
+    asteroids.forEach((a) => a.draw(ctx, palette));
+    powerUps.forEach((p) => p.draw(ctx, palette, reducedMotion.matches));
+    bullets.forEach((b) => b.draw(ctx, palette));
+    ship.draw(ctx, palette);
     // Único elemento del HUD que se queda en el canvas: la cuenta atrás del 3x.
     if (ship.tripleShot > 0) {
       ctx.font = "15px monospace";
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
-      ctx.fillStyle = "#0ff";
+      ctx.fillStyle = palette.hudTriple;
       ctx.fillText(`3x  ${ship.tripleShot.toFixed(1)}s`, 14, 26);
     }
+  }
+  function setPalette(p: AsteroidsPalette) {
+    palette = p;
+    // Repinta en vivo: también en pausa o game over (sin tocar el estado).
+    draw();
   }
   // ── Bucle principal ─────────────────────────────────────────────────────────
   function frame(ts: number) {
@@ -318,5 +331,5 @@ export function createAsteroids(
   document.addEventListener("visibilitychange", onVisibility);
   initGame();
   startLoop();
-  return { pause, resume, restart, end, destroy };
+  return { pause, resume, restart, end, destroy, setPalette };
 }

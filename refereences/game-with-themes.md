@@ -286,3 +286,102 @@ y apagado, baja saturación, sobre casi-negro.
   separar (p. ej. explosiones blancas universales), el slot ya está desacoplado.
 
 ---
+
+## asteroids (Asteroids) — 2026-10-14
+
+Cuarta implementación. Asteroids renderiza en modo vectorial puro con `fillStyle`/`strokeStyle`
+y hex/rgba (sin spritesheet), así que el patrón es el de Caída y Snake: slots de la paleta que
+reemplazan los literales originales en todos los `draw*`. No se necesitan tintes offscreen ni
+cache, ni se toca `tint.ts` (patrón de Arkanoid).
+
+### Ficheros
+
+**Creados**
+
+- `lib/games/asteroids/skins.ts` — tipo `AsteroidsPalette` (`bg`, `bullet`, `asteroid`, `ship`,
+  `thrust`, `particleRgb`, `powerUp`, `hudTriple`) y `SKINS: Record<SkinId, AsteroidsPalette>`.
+  En `clasico` todos los slots son los literales originales exactos.
+
+**Modificados**
+
+- `lib/games/asteroids/entities.ts` — `Bullet.draw`, `Asteroid.draw`, `PowerUp.draw`,
+  `Ship.draw` y `Particle.draw` reciben `palette: AsteroidsPalette` y leen de ella (balas,
+  trazo del polígono, trazo del casco, llama del propulsor, trazo del cuadrado + texto `3x`
+  del power-up y la línea de estela de partícula). Formas, tamaños, grosores de línea,
+  parpadeos y física sin cambios.
+- `lib/games/asteroids/types.ts` — nuevos `AsteroidsOptions.palette?` y
+  `AsteroidsEngine.setPalette(palette)` junto a `pause/resume/restart/end/destroy`.
+- `lib/games/asteroids/engine.ts` — `createAsteroids(canvas, callbacks, options = {})`
+  (tercer parámetro opcional, compat hacia atrás). Estado `let palette = options.palette ??
+  SKINS.clasico`. `draw()` pinta `ctx.fillStyle = palette.bg` (antes `"#000"`) y pasa
+  `palette` a cada `draw*`. El HUD interno `3x Ns` usa `palette.hudTriple` (antes `"#0ff"`).
+  Nuevo `setPalette(p)` reasigna la paleta y llama `draw()` para repintar en vivo (también en
+  pausa / game over porque `end()` y `pause()` no detienen el `draw()` directamente llamado).
+  No toca `score/lives/level/state/paused/rafId/ship/bullets/asteroids/particles/powerUps` ni
+  los listeners.
+- `components/asteroids-canvas.tsx` — prop `skin?: SkinId` (default `DEFAULT_SKIN`); `skinRef`
+  sincronizada; `useEffect([skin])` llama `engineRef.current?.setPalette(SKINS[skin])` sin
+  recrear el motor; paleta inicial se pasa como `{ palette: SKINS[skinRef.current] }` a
+  `createAsteroids`. Patrón idéntico al de `caida-canvas.tsx` / `snake-canvas.tsx`.
+- `lib/games/registry.ts` — entrada `asteroids` marcada con `skins: SKIN_IDS` (una línea).
+
+**No tocados** (fuera de scope): `lib/games/skins.ts`, `components/game-player.tsx`,
+`app/globals.css`, `lib/games/asteroids/constants.ts`, `lib/games/asteroids/utils.ts`,
+`AsteroidsControls`, base de datos.
+
+### Paleta — `AsteroidsPalette`
+
+| slot          | clasico                  | neon                   | retro                     |
+| ------------- | ------------------------ | ---------------------- | ------------------------- |
+| `bg`          | `#000`                   | `#05070f`              | `#0d0b08`                 |
+| `bullet`      | `#fff`                   | `#f5ff00`              | `#ffd9a0`                 |
+| `asteroid`    | `#fff`                   | `#00f5ff`              | `#d9c27a`                 |
+| `ship`        | `#fff`                   | `#00f5ff`              | `#d9c27a`                 |
+| `thrust`      | `rgba(255, 130, 0, 0.85)`| `rgba(255, 0, 110, 0.9)`| `rgba(255, 120, 40, 0.8)`|
+| `particleRgb` | `255,255,255`            | `255,0,110`            | `255,200,140`             |
+| `powerUp`     | `#0ff`                   | `#ff006e`              | `#6fb98f`                 |
+| `hudTriple`   | `#0ff`                   | `#ff006e`              | `#6fb98f`                 |
+
+`particleRgb` es la tripleta `r,g,b` que se interpola en el `rgba(${particleRgb}, ${alpha})`
+de `Particle.draw` (el alpha es dinámico — depende de la vida restante, no es color sino
+intensidad). `neon` reutiliza los tokens de plataforma `--cyan/--magenta/--yellow`. `retro`
+es fósforo cálido / apagado sobre casi negro.
+
+### Verificación
+
+- **`clasico` idéntico al original:** los 8 slots copian uno a uno los literales que había en
+  `engine.ts` (`"#000"`, `"#0ff"`) y `entities.ts` (`"#fff"`, `"rgba(255, 130, 0, 0.85)"`,
+  `"rgba(255,255,255,${alpha})"` → ahora con `particleRgb = "255,255,255"`). Formas, tamaños,
+  grosores de línea, parpadeos de invencibilidad / power-up expirando y la física siguen
+  idénticas.
+- **Cambio en vivo:** `setPalette` reasigna la paleta y llama `draw()` inmediato. Nave, balas,
+  asteroides vivos, partículas en curso, power-up flotante, texto HUD `3x Ns` y fondo
+  cambian de color sin reiniciar la partida. Funciona también en pausa (donde el bucle está
+  parado) y en game over porque `draw()` dentro de `setPalette` se llama al margen del
+  `requestAnimationFrame`. `score/lives/level/state` intactos.
+- **Solo color:** grep de `#`/`rgb`/`hsl` en `lib/games/asteroids/` confirma que todo literal
+  de color vive solo en `skins.ts`; el único uso restante fuera es la plantilla
+  `` `rgba(${palette.particleRgb},${alpha.toFixed(2)})` `` en `Particle.draw`, que es la
+  interpolación paramétrica esperada.
+- **lint:** OK (`npm run lint` exit 0).
+- **build:** OK (`npm run build` compila 10/10 páginas estáticas sin errores; TypeScript OK).
+- Preferencia persistente en `localStorage["av_skin_asteroids"]` vía `writeSkin` del selector
+  genérico de `game-player.tsx` (que ya existe desde Caída y aparece automáticamente al tener
+  `engine.skins.length > 1`).
+
+### Decisiones / suposiciones
+
+- Las partículas usan un `alpha` que se calcula frame a frame como `ttl/life` (fade-out
+  natural). Para que `clasico` reproduzca `rgba(255,255,255,${alpha})` exacto se parametriza
+  solo la tripleta RGB como un string literal (`"255,255,255"`), no un color opaco; así el
+  template `` `rgba(${particleRgb},${alpha})` `` encaja sin tocar la curva de alpha.
+- `powerUp` y `hudTriple` son dos slots aunque en las 3 skins coinciden: el power-up flotante
+  en el canvas y el texto fijo del HUD interno son dos "roles" visualmente distintos; dejarlos
+  separados permite re-colorearlos de forma independiente en el futuro sin tocar el motor.
+- Para `thrust` se usa un `rgba` completo (incluye alpha) porque la llama original tenía
+  `0.85` opacity integrada: parametrizarlo como un único string mantiene esa transparencia
+  dentro de la paleta sin exponer `thrustAlpha` como slot aparte.
+- El build inicial falló porque el formateador había reemplazado `let palette` por
+  `const palette` tras un reformat; se corrigió a `let` ya que `setPalette` reasigna el valor.
+
+---
