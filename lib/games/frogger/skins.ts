@@ -27,7 +27,6 @@ export type FroggerPalette = {
   turtleShell: string;
   turtleShellEdge: string;
   turtleHead: string;
-  turtleSubmerged: string;
   /** Rana. */
   frogBody: string;
   frogBelly: string;
@@ -59,7 +58,6 @@ const clasico: FroggerPalette = {
   turtleShell: "#2fbf6a",
   turtleShellEdge: "#17753f",
   turtleHead: "#48d97f",
-  turtleSubmerged: "rgba(47, 191, 106, 0.22)",
   frogBody: "#39e65c",
   frogBelly: "#9cf7a8",
   frogLeg: "#22a63c",
@@ -93,7 +91,6 @@ const neon: FroggerPalette = {
   turtleShell: "#00f5ff",
   turtleShellEdge: "#0088a8",
   turtleHead: "#aef7ff",
-  turtleSubmerged: "rgba(0, 245, 255, 0.28)",
   frogBody: "#00ff88",
   frogBelly: "#ccffe8",
   frogLeg: "#00b35f",
@@ -124,7 +121,6 @@ const retro: FroggerPalette = {
   turtleShell: "#6e9456",
   turtleShellEdge: "#3f5a30",
   turtleHead: "#8fb46f",
-  turtleSubmerged: "rgba(110, 148, 86, 0.22)",
   frogBody: "#7ea832",
   frogBelly: "#c7d89a",
   frogLeg: "#4e6b22",

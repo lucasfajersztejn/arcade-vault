@@ -16,9 +16,6 @@ import {
   ROW_RIVER_TOP,
   ROW_START,
   START_COL,
-  TURTLE_SUBMERGED_MS,
-  TURTLE_VISIBLE_MS,
-  TURTLE_WARN_MS,
 } from "@/lib/games/frogger/constants";
 export type Direction = "up" | "down" | "left" | "right";
 export type EntityKind = "car" | "truck" | "log" | "turtle";
@@ -28,8 +25,6 @@ export type Entity = {
   /** Ancho en celdas. */
   width: number;
   kind: EntityKind;
-  /** Solo para `turtle`: desfase dentro del ciclo de inmersión, en ms. */
-  phase?: number;
   /** Solo para `car`: índice de carrocería dentro de la paleta. */
   tint?: number;
 };
@@ -199,17 +194,12 @@ export function roundMsFor(level: number): number {
 export function buildLanes(level: number): Lane[] {
   return LANE_SPECS.map((spec) => {
     const stride = LANE_SPAN / spec.count;
-    const cycle = TURTLE_VISIBLE_MS + TURTLE_SUBMERGED_MS;
     const entities: Entity[] = Array.from({ length: spec.count }, (_, i) => {
       const entity: Entity = {
         col: i * stride,
         width: spec.width,
         kind: spec.entityKind,
       };
-      if (spec.entityKind === "turtle") {
-        // Cada grupo entra en el ciclo desfasado: nunca se hunden todos a la vez.
-        entity.phase = (i * cycle) / spec.count;
-      }
       if (spec.entityKind === "car") {
         entity.tint = i % 3;
       }
@@ -237,22 +227,6 @@ export function advanceLane(lane: Lane, dtSec: number): void {
       entity.col += LANE_SPAN;
     }
   }
-}
-/** Posición dentro del ciclo de inmersión de un grupo de tortugas, en ms. */
-function turtlePhase(entity: Entity, elapsedMs: number): number {
-  const cycle = TURTLE_VISIBLE_MS + TURTLE_SUBMERGED_MS;
-  return (elapsedMs + (entity.phase ?? 0)) % cycle;
-}
-/** Bajo el agua: ni se dibuja sólida ni sostiene a la rana. */
-export function isSubmerged(entity: Entity, elapsedMs: number): boolean {
-  if (entity.kind !== "turtle") return false;
-  return turtlePhase(entity, elapsedMs) >= TURTLE_VISIBLE_MS;
-}
-/** A punto de hundirse: parpadea, pero todavía sostiene. Solo es un aviso visual. */
-export function isSinking(entity: Entity, elapsedMs: number): boolean {
-  if (entity.kind !== "turtle") return false;
-  const t = turtlePhase(entity, elapsedMs);
-  return t >= TURTLE_VISIBLE_MS - TURTLE_WARN_MS && t < TURTLE_VISIBLE_MS;
 }
 /** Columna izquierda de la boca destino `index` (0-4). */
 export function goalColFor(index: number): number {
@@ -300,20 +274,17 @@ export function checkRoadCollision(frog: Frog, lanes: Lane[]): boolean {
 /**
  * Entidad del río que sostiene a la rana, o `null` si está sobre el agua.
  * Se mide con el centro de la rana: medio cuerpo fuera del tronco todavía flota.
+ * Troncos y tortugas sostienen siempre: las tortugas ya no se sumergen.
  */
-export function getSupport(
-  frog: Frog,
-  lanes: Lane[],
-  elapsedMs: number,
-): Entity | null {
+export function getSupport(frog: Frog, lanes: Lane[]): Entity | null {
   const lane = laneAt(lanes, frog.row);
   if (!lane || lane.kind !== "river") return null;
   const centre = frog.col + 0.5;
-  const support = lane.entities.find(
-    (entity) => centre >= entity.col && centre < entity.col + entity.width,
+  return (
+    lane.entities.find(
+      (entity) => centre >= entity.col && centre < entity.col + entity.width,
+    ) ?? null
   );
-  if (!support) return null;
-  return isSubmerged(support, elapsedMs) ? null : support;
 }
 /** ¿Esta fila es agua? Las filas del río matan sin soporte. */
 export function isRiverRow(row: number): boolean {

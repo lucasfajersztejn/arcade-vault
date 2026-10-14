@@ -31,8 +31,6 @@ import {
   goalIndexAt,
   insideBoard,
   isRiverRow,
-  isSinking,
-  isSubmerged,
   laneAt,
   roundMsFor,
   type Direction,
@@ -103,8 +101,6 @@ export function createFrogger(
   let lives = LIVES_START;
   /** Tiempo restante de la ronda, en ms. */
   let roundMs = 0;
-  /** Reloj del motor, en ms. Gobierna el ciclo de inmersión de las tortugas. */
-  let elapsed = 0;
   /** Fila más alta alcanzada en la ronda: cada fila nueva puntúa una sola vez. */
   let highestRow = ROW_START;
   let pendingDir: Direction | null = null;
@@ -140,7 +136,6 @@ export function createFrogger(
     score = 0;
     lives = LIVES_START;
     state = "playing";
-    elapsed = 0;
     started = false;
     startRound(1);
     emitScore();
@@ -211,7 +206,7 @@ export function createFrogger(
       killFrog();
       return;
     }
-    if (isRiverRow(frog.row) && !getSupport(frog, lanes, elapsed)) {
+    if (isRiverRow(frog.row) && !getSupport(frog, lanes)) {
       killFrog();
     }
   }
@@ -234,7 +229,6 @@ export function createFrogger(
   // ----------------------------------------------------------------- update
   function update(dtMs: number): void {
     if (state === "gameover") return;
-    elapsed += dtMs;
     const dtSec = dtMs / 1000;
     for (const lane of lanes) advanceLane(lane, dtSec);
     if (frog.animating) {
@@ -255,7 +249,7 @@ export function createFrogger(
     // Arrastre del río: la rana viaja con el tronco o las tortugas que la sostienen.
     if (state === "playing" && !frog.animating && isRiverRow(frog.row)) {
       const lane = laneAt(lanes, frog.row);
-      const support = getSupport(frog, lanes, elapsed);
+      const support = getSupport(frog, lanes);
       if (support && lane) {
         frog.col += lane.speed * lane.dir * dtSec;
         if (!insideBoard(frog.col)) {
@@ -380,22 +374,10 @@ export function createFrogger(
     }
   }
   function drawTurtles(entity: Entity, row: number): void {
-    const submerged = isSubmerged(entity, elapsed);
-    const sinking = isSinking(entity, elapsed);
-    // Parpadeo de aviso: la tortuga sigue sosteniendo, pero ya avisa.
-    const blink = sinking && Math.floor(elapsed / 150) % 2 === 0;
     for (let i = 0; i < entity.width; i += 1) {
       const cx = px(entity.col + i) + CELL / 2;
       const cy = py(row) + CELL / 2;
-      if (submerged) {
-        ctx.strokeStyle = palette.turtleSubmerged;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, CELL / 2 - 6, 0, Math.PI * 2);
-        ctx.stroke();
-        continue;
-      }
-      ctx.fillStyle = blink ? palette.turtleShellEdge : palette.turtleShell;
+      ctx.fillStyle = palette.turtleShell;
       ctx.beginPath();
       ctx.arc(cx, cy, CELL / 2 - 5, 0, Math.PI * 2);
       ctx.fill();

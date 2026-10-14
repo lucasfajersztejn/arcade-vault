@@ -25,10 +25,13 @@ export const START_COL = 7;
 /** Duración de la animación de salto, en ms. Mientras dura, la rana no acepta más input. */
 export const JUMP_MS = 120;
 export const LIVES_START = 3;
-/** Temporizador de ronda, en ms. Se acorta por nivel hasta el mínimo. */
-export const ROUND_MS_START = 15_000;
-export const ROUND_MS_PER_LEVEL = 1_000;
-export const ROUND_MS_MIN = 7_000;
+/**
+ * Temporizador de ronda, en ms. La primera ronda es holgada (90 s) para dar margen
+ * a aprender los carriles; cada nivel recorta 5 s hasta el suelo de 30 s.
+ */
+export const ROUND_MS_START = 90_000;
+export const ROUND_MS_PER_LEVEL = 5_000;
+export const ROUND_MS_MIN = 30_000;
 /** Puntuación. */
 export const POINTS_FORWARD = 10;
 export const POINTS_GOAL = 50;
@@ -37,11 +40,6 @@ export const TIME_BONUS_PER_SEC = 10;
 export const MAX_SCORE = 99_999_999;
 /** Cada nivel acelera todas las entidades un 15 %. */
 export const LEVEL_SPEED_FACTOR = 1.15;
-/** Ciclo de inmersión de un grupo de tortugas, en ms. */
-export const TURTLE_VISIBLE_MS = 3_000;
-export const TURTLE_SUBMERGED_MS = 1_500;
-/** Margen de aviso antes de hundirse: la tortuga parpadea sin dejar de dar soporte. */
-export const TURTLE_WARN_MS = 900;
 /** Clamp de dt en ms, para que una pestaña recuperada no teletransporte el tráfico. */
 export const MAX_DT = 50;
 /** Barra de tiempo: ocupa el alto de la franja superior de la fila de metas. */

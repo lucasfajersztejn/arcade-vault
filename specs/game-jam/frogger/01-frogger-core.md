@@ -1,9 +1,16 @@
 # SPEC — Frogger: integración core del juego
 
-> **Estado:** Aprobado
+> **Estado:** implementado
 > **Depende de:** 06-games-table-leaderboard-supabase
 > **Fecha:** 2026-05-20
 > **Objetivo:** Integrar Frogger (canvas puro, construido desde cero) como juego jugable en Arcade Vault con ID `frogger`, conectando score, vidas, nivel y game over con el HUD React y la play-page dedicada.
+
+> **Nota de implementación (2026-10-15).** El cuerpo de esta spec se conserva tal y como se aprobó. Lo que de verdad se construyó se desvía de él en cuatro puntos, todos decididos con el usuario y detallados en _Acceptance criteria_:
+>
+> 1. **Arquitectura:** no hay `components/games/FroggerGame.tsx` ni play-page propia. Se siguió el contrato del repo — motor en `lib/games/frogger/`, `components/frogger-canvas.tsx`, entrada en `lib/games/registry.ts`, y `GamePlayer` sobre la ruta `/games/[id]/jugar`.
+> 2. **Tortugas:** no se sumergen. Flotan y sostienen siempre.
+> 3. **Temporizador:** 90 s en la ronda 1, −5 s por nivel, suelo de 30 s. Además se arma con el primer movimiento, no con la carga de la página.
+> 4. **HUD interno:** solo la barra de tiempo; el resto lo pinta la plataforma.
 
 ---
 
@@ -103,7 +110,7 @@ No se introducen nuevas tablas ni tipos TypeScript — se reutilizan `GameRow` y
    Tipos locales (no exportados):
 
    ```ts
-   type Direction = 'up' | 'down' | 'left' | 'right';
+   type Direction = "up" | "down" | "left" | "right";
    interface Lane {
      row: number;
      speed: number;
@@ -113,7 +120,7 @@ No se introducen nuevas tablas ni tipos TypeScript — se reutilizan `GameRow` y
    interface Entity {
      col: number;
      width: number;
-     type: 'car' | 'truck' | 'log' | 'turtle';
+     type: "car" | "truck" | "log" | "turtle";
      submerged?: boolean;
    }
    interface Frog {
@@ -183,40 +190,49 @@ No se introducen nuevas tablas ni tipos TypeScript — se reutilizan `GameRow` y
 
 ## Acceptance criteria
 
-- [ ] La fila `frogger` existe en la tabla `games` de Supabase con los valores del data model.
-- [ ] La card de Frogger aparece en `/games` con cover `cover-frogger` y color `lime`.
-- [ ] La ruta `/games/frogger/play` carga sin errores de SSR ni de TypeScript.
-- [ ] El canvas (640 × 560) se renderiza con las tres zonas visualmente diferenciadas (carretera, río, zonas seguras, bocas destino).
-- [ ] La rana aparece centrada en la fila de inicio al cargar la partida.
-- [ ] La rana salta exactamente una celda (40 px) por pulsación de tecla de dirección con animación de 120 ms.
-- [ ] La rana no puede salir por los bordes laterales.
-- [ ] Los coches y camiones se mueven horizontalmente en loop por sus carriles; se reintroducen por el lado opuesto al salir.
-- [ ] Los troncos y tortugas se mueven horizontalmente en loop por sus carriles.
-- [ ] Las tortugas alternan entre visible y sumergida con el ciclo definido.
-- [ ] La rana muere al ser alcanzada por un vehículo de carretera.
-- [ ] La rana muere al caer al agua (no estar sobre tronco ni tortugas visibles).
-- [ ] La rana muere cuando la tortuga que la soporta se sumerge.
-- [ ] La rana muere al agotar el temporizador de ronda.
-- [ ] Al morir, `onLivesChange(lives - 1)` se dispara; la rana vuelve a la fila de inicio.
-- [ ] Al llegar a una boca libre, la boca queda marcada y se suma el bonus de puntuación.
-- [ ] Al llegar a una boca ya ocupada, la rana muere.
-- [ ] Al completar las 5 bocas, la ronda termina y comienza la siguiente con `level` incrementado.
-- [ ] `onLevelChange(level)` se dispara al iniciar cada nueva ronda.
-- [ ] La velocidad de entidades aumenta con cada nivel.
-- [ ] El temporizador de ronda disminuye con cada nivel.
-- [ ] `onScoreChange(score)` se dispara en cada cambio de puntuación.
-- [ ] El HUD interno del canvas (score, nivel, vidas-iconos, barra de tiempo) se dibuja correctamente.
-- [ ] El HUD React de la plataforma refleja en tiempo real score, vidas y nivel.
-- [ ] El botón "PAUSA" de la plataforma congela el game loop; "REANUDAR" lo reanuda.
-- [ ] Las teclas P / Esc no provocan una pausa independiente del canvas.
-- [ ] Al llegar a `lives = 0`, `onLivesChange(0)` y `onGameOver(score)` se disparan; aparece el modal React.
-- [ ] El modal pre-rellena el nombre desde `av_player_name` si existe en localStorage.
-- [ ] Al confirmar el nombre, el score se inserta en Supabase y el nombre se persiste en localStorage.
-- [ ] El botón de guardar se deshabilita tras el primer envío (sin doble inserción).
-- [ ] El botón "JUGAR DE NUEVO" reinicia la partida desde cero (nuevo `gameKey`).
-- [ ] El score guardado aparece en `/games/frogger` y en `/hall-of-fame` al recargar.
-- [ ] `npm run build` completa sin errores de TypeScript.
-- [ ] Ninguna ruta existente devuelve 500.
+Leyenda: ✅ verificado en el navegador · 🔍 correcto por código, no provocado en una partida automatizada · ✏️ adaptado al contrato real del repo · ❌ no cumplido.
+
+- [x] ✅ ✏️ La fila `frogger` existe en la tabla `games` de Supabase con los valores del data model. **Adaptado:** `color = 'green'`; `'lime'` viola el CHECK `games_color_check` (`cyan|magenta|yellow|green`). Alta por migración `add_frogger_game`, con `sort_order = max+1` (= 5).
+- [x] ✅ ✏️ La card de Frogger aparece en `/games` con cover `cover-frogger` y color ~~`lime`~~ `green`. Portada CSS pura (gradiente de estratos + SVG inline) en `app/globals.css`.
+- [x] ✅ ✏️ La ruta ~~`/games/frogger/play`~~ **`/games/frogger/jugar`** carga sin errores de SSR ni de TypeScript. **Adaptado:** no se crea play-page propia; se usa la ruta genérica `app/games/[id]/jugar` con `GamePlayer`, que ya aporta HUD, pausa, modal y guardado.
+- [x] ✅ El canvas (640 × 560) se renderiza con las zonas visualmente diferenciadas (carretera, río, zonas seguras, bocas destino). Se descarta el `480 × 640` del Scope por incoherente con el bloque de constantes.
+- [x] ✅ La rana aparece centrada en la fila de inicio al cargar la partida. Medido por píxeles: columna 7,49 (`START_COL = 7`, alineada con la boca central).
+- [x] ✅ La rana salta exactamente una celda (40 px) por pulsación de tecla de dirección con animación de 120 ms.
+- [x] ✅ La rana no puede salir por los bordes laterales. Medido: tras 12 ← queda en 0,49 y tras 20 → en 15,49.
+- [x] ✅ Los coches y camiones se mueven horizontalmente en loop por sus carriles; se reintroducen por el lado opuesto al salir. Circuito de `LANE_SPAN = COLS + 4` para que salgan del todo y los huecos no se degraden.
+- [x] ✅ Los troncos y tortugas se mueven horizontalmente en loop por sus carriles.
+- [x] ✏️ ~~Las tortugas alternan entre visible y sumergida con el ciclo definido.~~ **Criterio retirado a petición del usuario (2026-10-15):** las tortugas flotan siempre y sostienen siempre. Eliminados `TURTLE_VISIBLE_MS`, `TURTLE_SUBMERGED_MS`, `TURTLE_WARN_MS`, `isSubmerged`, `isSinking`, `Entity.phase` y el slot de paleta `turtleSubmerged`. Verificado por muestreo de píxeles: el caparazón nunca desaparece.
+- [x] ✅ La rana muere al ser alcanzada por un vehículo de carretera.
+- [x] 🔍 La rana muere al caer al agua (no estar sobre tronco ni tortugas).
+- [x] ✏️ ~~La rana muere cuando la tortuga que la soporta se sumerge.~~ **Criterio retirado:** sin inmersión no existe esta muerte. Quedan cuatro: vehículo, agua, borde lateral montada en el río y tiempo agotado.
+- [x] ✅ La rana muere al agotar el temporizador de ronda.
+- [x] ✅ Al morir, `onLives(lives - 1)` se dispara; la rana vuelve a la fila de inicio. (El callback se llama `onLives`, no `onLivesChange`: nombre del contrato `EngineCanvasProps`.)
+- [x] 🔍 Al llegar a una boca libre, la boca queda marcada y se suma el bonus de puntuación (`+50` + `segundos_restantes × 10`).
+- [x] 🔍 Al llegar a una boca ya ocupada, o a la orilla entre bocas, la rana muere.
+- [x] 🔍 Al completar las 5 bocas, la ronda termina y comienza la siguiente con `level` incrementado y `+200` puntos.
+- [x] 🔍 `onLevel(level)` se dispara al iniciar cada nueva ronda (y una vez en el init).
+- [x] 🔍 La velocidad de entidades aumenta con cada nivel (`speedFor`: +15 % acumulativo).
+- [x] ✅ ✏️ El temporizador de ronda disminuye con cada nivel. **Ajustado a petición del usuario (2026-10-15):** 90 s en la ronda 1, −5 s por nivel, suelo de 30 s (antes 15 s / −1 s / 7 s). Verificado: al 94,4 % tras 5 s.
+- [x] ✅ `onScore(score)` se dispara en cada cambio de puntuación.
+- [x] ✏️ El HUD interno del canvas se dibuja correctamente. **Reducido por decisión del usuario a la barra de tiempo**: score, nivel y vidas los pinta el HUD de la plataforma, y el `contrato-motor.md` del repo prohíbe duplicarlos en el canvas.
+- [x] ✅ El HUD React de la plataforma refleja en tiempo real score, vidas y nivel.
+- [x] ✅ El botón "PAUSA" de la plataforma congela el game loop; "REANUDAR" lo reanuda.
+- [x] ✅ Las teclas P / Esc no provocan una pausa independiente del canvas (el motor emite `onPause` y la plataforma se sincroniza en ambos sentidos).
+- [x] ✅ Al llegar a `lives = 0`, `onLives(0)` y `onGameOver(score)` se disparan; aparece el modal React.
+- [x] ✅ ✏️ El modal pre-rellena el nombre desde ~~`av_player_name`~~ **`av_user`** (clave real de `lib/session.tsx`); sin sesión muestra `INVITADO`.
+- [ ] ❌ Al confirmar el nombre, el score se inserta en Supabase ✅ **y el nombre se persiste en localStorage** ❌. La inserción funciona (verificada en la tabla `scores`), pero `GamePlayer` no escribe `av_user` al guardar. Es comportamiento preexistente de la plataforma, idéntico en los otros cuatro juegos: corregirlo toca `components/game-player.tsx` y afecta a todos → **spec aparte**.
+- [x] ✅ El botón de guardar no permite doble inserción (tras el primer envío se sustituye por el aviso «PUNTUACIÓN GUARDADA»).
+- [x] ✅ ✏️ El botón "JUGAR DE NUEVO" reinicia la partida desde cero. **Adaptado:** no hay `gameKey`; `GamePlayer` llama a `EngineHandle.restart()`, que reinicia sin remontar el componente ni duplicar el bucle.
+- [x] ✅ ✏️ El score guardado aparece en `/games/frogger` y en ~~`/hall-of-fame`~~ **`/salon`** al recargar.
+- [x] ✅ `npm run build` completa sin errores de TypeScript (10/10 páginas) y `npm run lint` pasa limpio.
+- [x] ✅ Ninguna ruta existente devuelve 500 (`/`, `/games`, `/games/frogger`, `/games/frogger/jugar`, `/salon`, `/about`).
+
+### Fuera del plan original, añadido durante la implementación
+
+- [x] ✅ **El temporizador se arma con el primer movimiento de la partida.** Con el reloj corriendo desde la carga, leer la leyenda de controles costaba las tres vidas sin tocar una tecla. Esperar en la orilla sigue siendo mortal.
+- [x] ✅ **Tres skins de color** (`clasico`, `neon`, `retro`) con selector en vivo, vía el agente `skin-designer` (reporte en `refereences/game-with-themes.md`).
+- [x] ✅ **Gamepad táctil en móvil** (D-pad a las cuatro direcciones, A y B inertes) y canvas + gamepad en una pantalla sin scroll, vía el agente `mobile-porter` (reporte en `refereences/mobile-porter-report.md`). Fuera del alcance declarado de esta spec, es el alcance de SPEC 11/12.
+- [x] ✅ **10 marcas ficticias de ejemplo** en el ranking (migración `seed_example_frogger_scores`).
 
 ---
 
