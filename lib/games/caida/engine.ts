@@ -23,6 +23,8 @@ import {
   merge,
   tryRotate,
 } from "./entities";
+import { DEFAULT_SKIN } from "@/lib/games/skins";
+import { SKINS, type CaidaPalette } from "./skins";
 import type {
   Board,
   CaidaCallbacks,
@@ -63,6 +65,7 @@ export function createCaida(
       resume: noop,
       restart: noop,
       end: noop,
+      setPalette: noop,
       destroy: noop,
     };
   }
@@ -70,6 +73,7 @@ export function createCaida(
   canvas.height = ROWS * BLOCK;
   const { nextCanvas } = opts;
   const nextCtx = nextCanvas?.getContext("2d") ?? null;
+  let palette: CaidaPalette = opts.palette ?? SKINS[DEFAULT_SKIN];
   if (nextCanvas) {
     nextCanvas.width = NEXT_SIZE;
     nextCanvas.height = NEXT_SIZE;
@@ -104,7 +108,7 @@ export function createCaida(
   function spawn() {
     current = next;
     next = randomPiece();
-    if (nextCtx) drawNext(nextCtx, next);
+    if (nextCtx) drawNext(nextCtx, next, palette);
     if (collide(board, current.shape, current.x, current.y)) gameOver();
   }
   function lockPiece() {
@@ -207,10 +211,12 @@ export function createCaida(
   function draw() {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid(ctx);
-    drawBoard(ctx, board);
-    drawGhost(ctx, board, current);
-    drawPiece(ctx, current, current.y);
+    ctx.fillStyle = palette.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawGrid(ctx, palette);
+    drawBoard(ctx, board, palette);
+    drawGhost(ctx, board, current, palette);
+    drawPiece(ctx, current, current.y, palette);
   }
   // ── Bucle principal ─────────────────────────────────────────────────────────
   function frame(ts: number) {
@@ -255,6 +261,14 @@ export function createCaida(
     gameOver();
     draw();
   }
+  // Cambia la paleta en vivo y repinta al instante (tablero y vista previa),
+  // sin tocar el estado del juego: funciona incluso en pausa o game over.
+  function setPalette(p: CaidaPalette) {
+    if (destroyed) return;
+    palette = p;
+    draw();
+    if (nextCtx) drawNext(nextCtx, next, palette);
+  }
   function destroy() {
     if (destroyed) return;
     destroyed = true;
@@ -277,5 +291,5 @@ export function createCaida(
   document.addEventListener("visibilitychange", onVisibility);
   initGame();
   startLoop();
-  return { pause, resume, restart, end, destroy };
+  return { pause, resume, restart, end, setPalette, destroy };
 }

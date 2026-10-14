@@ -1,8 +1,9 @@
+import type { CaidaPalette } from "./skins";
 /** Matriz de celdas: 0 = vacía, 1–7 = índice de color de la pieza. */
 export type Matrix = number[][];
 export type Board = Matrix;
 export type Piece = {
-  /** Tipo de pieza (1–7) y, a la vez, índice en `COLORS`. */
+  /** Tipo de pieza (1–7) y, a la vez, índice en `pieceColors` de la paleta. */
   type: number;
   shape: Matrix;
   x: number;
@@ -20,6 +21,8 @@ export type CaidaCallbacks = {
 export type CaidaOptions = {
   /** Canvas de la vista previa de la siguiente pieza (120×120). */
   nextCanvas?: HTMLCanvasElement;
+  /** Paleta de color inicial (por defecto la skin `clasico`). */
+  palette?: CaidaPalette;
 };
 export type CaidaEngine = {
   pause: () => void;
@@ -28,6 +31,8 @@ export type CaidaEngine = {
   restart: () => void;
   /** Fuerza el game over (botón FIN). */
   end: () => void;
+  /** Cambia la paleta de color en vivo y repinta; no toca el estado del juego. */
+  setPalette: (palette: CaidaPalette) => void;
   /** Cancela el bucle y quita todos los listeners. */
   destroy: () => void;
 };

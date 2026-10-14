@@ -1,11 +1,9 @@
 import {
   BASE_DROP_INTERVAL,
   BLOCK,
-  COLORS,
   COLS,
   DROP_STEP,
   GHOST_ALPHA,
-  GRID_LINE,
   LINES_PER_LEVEL,
   LINE_SCORES,
   MIN_DROP_INTERVAL,
@@ -14,6 +12,7 @@ import {
   ROWS,
   WALL_KICKS,
 } from "./constants";
+import type { CaidaPalette } from "./skins";
 import type { Board, Matrix, Piece } from "./types";
 import { rotateCW } from "./utils";
 /** ¿Choca la forma, colocada en (ox, oy), con las paredes, el suelo o bloques fijados? */
@@ -86,18 +85,22 @@ export function drawBlock(
   y: number,
   colorIndex: number,
   size: number,
+  palette: CaidaPalette,
   alpha = 1,
 ): void {
   if (!colorIndex) return;
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = COLORS[colorIndex] as string;
+  ctx.fillStyle = palette.pieceColors[colorIndex] as string;
   ctx.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  ctx.fillStyle = "rgba(255,255,255,0.12)"; // brillo superior
+  ctx.fillStyle = palette.gloss; // brillo superior
   ctx.fillRect(x * size + 1, y * size + 1, size - 2, 4);
   ctx.globalAlpha = 1;
 }
-export function drawGrid(ctx: CanvasRenderingContext2D): void {
-  ctx.strokeStyle = GRID_LINE;
+export function drawGrid(
+  ctx: CanvasRenderingContext2D,
+  palette: CaidaPalette,
+): void {
+  ctx.strokeStyle = palette.grid;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -112,37 +115,58 @@ export function drawGrid(ctx: CanvasRenderingContext2D): void {
     ctx.stroke();
   }
 }
-export function drawBoard(ctx: CanvasRenderingContext2D, board: Board): void {
+export function drawBoard(
+  ctx: CanvasRenderingContext2D,
+  board: Board,
+  palette: CaidaPalette,
+): void {
   for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++) drawBlock(ctx, c, r, board[r][c], BLOCK);
+    for (let c = 0; c < COLS; c++)
+      drawBlock(ctx, c, r, board[r][c], BLOCK, palette);
 }
 /** Dibuja la pieza con su esquina superior izquierda en la fila `y` (y opacidad opcional). */
 export function drawPiece(
   ctx: CanvasRenderingContext2D,
   piece: Piece,
   y: number,
+  palette: CaidaPalette,
   alpha = 1,
 ): void {
   for (let r = 0; r < piece.shape.length; r++)
     for (let c = 0; c < piece.shape[r].length; c++)
       if (piece.shape[r][c])
-        drawBlock(ctx, piece.x + c, y + r, piece.shape[r][c], BLOCK, alpha);
+        drawBlock(
+          ctx,
+          piece.x + c,
+          y + r,
+          piece.shape[r][c],
+          BLOCK,
+          palette,
+          alpha,
+        );
 }
 /** Pieza fantasma: la pieza actual en su fila de aterrizaje, translúcida. */
 export function drawGhost(
   ctx: CanvasRenderingContext2D,
   board: Board,
   piece: Piece,
+  palette: CaidaPalette,
 ): void {
-  drawPiece(ctx, piece, ghostY(board, piece), GHOST_ALPHA);
+  drawPiece(ctx, piece, ghostY(board, piece), palette, GHOST_ALPHA);
 }
 /** Dibuja la pieza centrada en la cuadrícula de 4×4 del canvas NEXT. */
-export function drawNext(ctx: CanvasRenderingContext2D, piece: Piece): void {
+export function drawNext(
+  ctx: CanvasRenderingContext2D,
+  piece: Piece,
+  palette: CaidaPalette,
+): void {
   ctx.clearRect(0, 0, NEXT_SIZE, NEXT_SIZE);
+  ctx.fillStyle = palette.bg;
+  ctx.fillRect(0, 0, NEXT_SIZE, NEXT_SIZE);
   const { shape } = piece;
   const offX = Math.floor((NEXT_GRID - shape[0].length) / 2);
   const offY = Math.floor((NEXT_GRID - shape.length) / 2);
   for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++)
-      drawBlock(ctx, offX + c, offY + r, shape[r][c], BLOCK);
+      drawBlock(ctx, offX + c, offY + r, shape[r][c], BLOCK, palette);
 }

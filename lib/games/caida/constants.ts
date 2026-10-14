@@ -6,17 +6,6 @@ export const BLOCK = 30;
 /** Vista previa de la siguiente pieza: canvas 120×120, cuadrícula de 4×4 celdas de 30 px. */
 export const NEXT_SIZE = 120;
 export const NEXT_GRID = 4;
-/** Colores por tipo de pieza (índice 1–7: I, O, T, S, Z, J, L). El índice 0 es la celda vacía. */
-export const COLORS: (string | null)[] = [
-  null,
-  "#4dd0e1", // I
-  "#ffd54f", // O
-  "#ba68c8", // T
-  "#81c784", // S
-  "#e57373", // Z
-  "#90caf9", // J
-  "#ffb74d", // L
-];
 /** Matrices de las 7 piezas. El original añade una 8.ª (N, tuerca) que aquí se omite. */
 export const PIECES: (Matrix | null)[] = [
   null,
@@ -73,5 +62,3 @@ export const GHOST_ALPHA = 0.2;
 export const MAX_DT = 50;
 /** Tope de la columna `scores.score` en la BD. */
 export const MAX_SCORE = 99_999_999;
-/** Color de la rejilla del tablero (`--grid-line` del tema oscuro del original). */
-export const GRID_LINE = "#22222e";

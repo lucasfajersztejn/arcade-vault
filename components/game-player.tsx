@@ -1,13 +1,36 @@
 "use client";
-import { useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
+import {
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
 import Link from "next/link";
 import { submitScore } from "@/lib/db/scores";
 import { ENGINES, type EngineHandle } from "@/lib/games/registry";
+import {
+  DEFAULT_SKIN,
+  readSkin,
+  SKIN_LABELS,
+  writeSkin,
+  type SkinId,
+} from "@/lib/games/skins";
 import { useSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/client";
 import type { Game } from "@/lib/types";
 const LIVES = 3;
 type SaveState = "idle" | "saving" | "saved" | "error";
+/** Evento local para que el selector de skin revalide el valor leído de localStorage. */
+const SKIN_CHANGE_EVENT = "av-skin-change";
+function subscribeSkin(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(SKIN_CHANGE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(SKIN_CHANGE_EVENT, callback);
+  };
+}
 export function GamePlayer({ game }: { game: Game }) {
   const { user } = useSession();
   const [score, setScore] = useState(0);
@@ -17,10 +40,22 @@ export function GamePlayer({ game }: { game: Game }) {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [lives, setLives] = useState(LIVES);
   const [engineLevel, setEngineLevel] = useState(1);
+  // En el servidor (y durante la hidratación) el snapshot es la skin por
+  // defecto; tras hidratar React relee localStorage sin provocar mismatch.
+  const skin = useSyncExternalStore(
+    subscribeSkin,
+    () => readSkin(game.id),
+    () => DEFAULT_SKIN,
+  );
   const modalRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<EngineHandle>(null);
   // Los juegos jugables son los del registro de motores.
   const engine = ENGINES[game.id];
+  const changeSkin = (next: SkinId) => {
+    // Persistir y notificar: no reinicia la partida ni toca la puntuación.
+    writeSkin(game.id, next);
+    window.dispatchEvent(new Event(SKIN_CHANGE_EVENT));
+  };
   const name = nameInput ?? user?.name ?? "INVITADO";
   const restart = () => {
     setScore(0);
@@ -115,6 +150,20 @@ export function GamePlayer({ game }: { game: Game }) {
           </div>
         </div>
         <div className="hud-actions">
+          {engine.skins && engine.skins.length > 1 && (
+            <select
+              className="btn hud-skin"
+              value={skin}
+              onChange={(e) => changeSkin(e.target.value as SkinId)}
+              aria-label="Skin de color"
+            >
+              {engine.skins.map((id) => (
+                <option key={id} value={id}>
+                  {SKIN_LABELS[id]}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             type="button"
             className="btn yellow"
@@ -140,6 +189,7 @@ export function GamePlayer({ game }: { game: Game }) {
             onLevel={setEngineLevel}
             onGameOver={handleGameOver}
             onPause={setPaused}
+            skin={engine.skins ? skin : DEFAULT_SKIN}
           />
           {paused && (
             <div
