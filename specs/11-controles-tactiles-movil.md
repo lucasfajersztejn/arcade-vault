@@ -1,6 +1,6 @@
 # SPEC 11 — Controles táctiles para móvil
 
-**Estado:** Borrador
+**Estado:** Aprobado
 **Depende de:** SPEC 05 (`specs/05-juego-asteroids.md`), SPEC 07 (`specs/07-juego-caida.md`), SPEC 08 (`specs/08-juego-bloque-buster.md`) y SPEC 10 (`specs/10-juego-snake.md`) por los motores y sus contratos; SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por `GamePlayer` y el HUD.
 **Fecha:** 2026-10-14
 **Objetivo:** Hacer jugables en móvil los cuatro juegos del catálogo (Asteroids, Caída, Bloque Buster, Snake) con un overlay de controles táctiles sobre el canvas (D-pad + botones de acción) y un HUD compactado para pantallas pequeñas.
