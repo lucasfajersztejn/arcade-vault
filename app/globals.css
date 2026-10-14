@@ -2219,3 +2219,153 @@ a {
   height: 1px;
   overflow: hidden;
 }
+/* ===== TOUCH OVERLAY (SPEC 11) ===== */
+/* El overlay se superpone al canvas dentro de `.crt-screen`. Solo visible en
+   dispositivos táctiles o pantallas pequeñas, nunca en escritorio. */
+.touch-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: none;
+  pointer-events: none;
+  padding: 12px;
+  padding-left: calc(12px + env(safe-area-inset-left, 0px));
+  padding-right: calc(12px + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+@media (pointer: coarse), (max-width: 768px) {
+  .touch-overlay {
+    display: block;
+  }
+}
+.touch-dpad {
+  position: absolute;
+  left: calc(12px + env(safe-area-inset-left, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  gap: 2px;
+  pointer-events: none;
+}
+.touch-dpad-row {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+.touch-dpad-btn,
+.touch-action-btn {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  font-family: var(--pixel);
+  background: rgba(10, 10, 15, 0.55);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition:
+    transform 80ms ease-out,
+    box-shadow 80ms ease-out,
+    color 80ms ease-out,
+    border-color 80ms ease-out;
+}
+.touch-dpad-btn {
+  width: 56px;
+  height: 56px;
+  font-size: 20px;
+}
+.touch-dpad-btn[data-pressed="true"] {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow:
+    0 0 10px rgba(0, 245, 255, 0.55),
+    inset 0 0 10px rgba(0, 245, 255, 0.3);
+  transform: scale(0.95);
+}
+.touch-dpad-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.touch-dpad-spacer,
+.touch-dpad-core {
+  width: 56px;
+  height: 56px;
+  display: inline-block;
+}
+.touch-dpad-core {
+  border: 1px dashed var(--line-2);
+  background: rgba(0, 245, 255, 0.04);
+}
+.touch-actions {
+  position: absolute;
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+.touch-action-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  color: var(--cyan);
+}
+.touch-action-btn.primary {
+  color: var(--magenta);
+  border-color: rgba(255, 0, 110, 0.4);
+}
+.touch-action-btn[data-pressed="true"] {
+  border-color: var(--cyan);
+  box-shadow:
+    0 0 14px rgba(0, 245, 255, 0.6),
+    inset 0 0 12px rgba(0, 245, 255, 0.35);
+  transform: scale(0.95);
+}
+.touch-action-btn.primary[data-pressed="true"] {
+  border-color: var(--magenta);
+  box-shadow:
+    0 0 14px rgba(255, 0, 110, 0.65),
+    inset 0 0 12px rgba(255, 0, 110, 0.35);
+}
+.touch-action-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.touch-action-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+/* Landscape apretado: botones un pelín más pequeños para no tapar el canvas. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  .touch-dpad-btn,
+  .touch-dpad-spacer,
+  .touch-dpad-core {
+    width: 48px;
+    height: 48px;
+  }
+  .touch-dpad-btn {
+    font-size: 18px;
+  }
+  .touch-action-btn {
+    width: 60px;
+    height: 60px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .touch-dpad-btn,
+  .touch-action-btn {
+    transition: none;
+  }
+  .touch-dpad-btn[data-pressed="true"],
+  .touch-action-btn[data-pressed="true"] {
+    transform: none;
+  }
+}
