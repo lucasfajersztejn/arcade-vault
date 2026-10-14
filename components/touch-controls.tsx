@@ -1,46 +1,42 @@
 "use client";
 import { useCallback, useEffect, useRef } from "react";
-import type {
-  TouchDpadDir,
-  TouchLayoutId,
-  TouchSpec,
-} from "@/lib/games/registry";
+import type { TouchSpec, TouchActionId } from "@/lib/games/registry";
 type Props = {
-  layout: TouchLayoutId;
-  actions: TouchSpec;
+  spec: TouchSpec;
   onInput: (action: string, pressed: boolean) => void;
 };
-const DPAD_ARIA: Record<TouchDpadDir, string> = {
+type SlotId = "up" | "down" | "left" | "right" | "a" | "b";
+const DPAD_SLOT_LABEL: Record<"up" | "down" | "left" | "right", string> = {
   up: "Arriba",
   down: "Abajo",
   left: "Izquierda",
   right: "Derecha",
 };
-const DPAD_ACTION: Record<TouchLayoutId, Record<TouchDpadDir, string>> = {
-  dpad4: { up: "up", down: "down", left: "left", right: "right" },
-  "dpad-horizontal": { up: "up", down: "down", left: "left", right: "right" },
-  snake: { up: "up", down: "down", left: "left", right: "right" },
-  caida: { up: "rotate", down: "down", left: "left", right: "right" },
-  "bloque-buster": { up: "up", down: "down", left: "left", right: "right" },
-  asteroids: {
-    up: "thrust",
-    down: "down",
-    left: "rot-left",
-    right: "rot-right",
-  },
+// Traducción de los `action id` del motor a texto humano para los aria-labels.
+const ACTION_LABEL: Record<string, string> = {
+  up: "arriba",
+  down: "abajo",
+  left: "izquierda",
+  right: "derecha",
+  thrust: "propulsión",
+  "rot-left": "girar a la izquierda",
+  "rot-right": "girar a la derecha",
+  shoot: "disparar",
+  hyperspace: "hiperespacio",
+  rotate: "rotar",
+  drop: "soltar",
+  launch: "lanzar",
 };
-const ARROWS: Record<TouchDpadDir, string> = {
-  up: "▲",
-  down: "▼",
-  left: "◀",
-  right: "▶",
-};
-export function TouchControls({ layout, actions, onInput }: Props) {
-  // Cada botón reserva su propio pointerId para no interferir con los demás dedos.
-  const pointersRef = useRef<Map<string, number>>(new Map());
+function describe(slotName: string, action: TouchActionId): string {
+  if (!action) return `${slotName}: inactivo`;
+  const human = ACTION_LABEL[action] ?? action;
+  return `${slotName}: ${human}`;
+}
+export function TouchControls({ spec, onInput }: Props) {
+  // Cada slot reserva su propio pointerId para no interferir con los demás dedos.
+  const pointersRef = useRef<Map<SlotId, number>>(new Map());
   // Acciones todavía en estado "pressed" para poder soltarlas al desmontar.
   const pressedRef = useRef<Set<string>>(new Set());
-  // Al desmontar, suelta cualquier botón que haya quedado pulsado para evitar hold permanente.
   useEffect(() => {
     const pressed = pressedRef.current;
     const pointers = pointersRef.current;
@@ -53,18 +49,21 @@ export function TouchControls({ layout, actions, onInput }: Props) {
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
       const el = e.currentTarget;
-      const key = el.dataset.key;
+      const slot = el.dataset.slot as SlotId | undefined;
       const action = el.dataset.action;
-      if (!key || !action) return;
-      if (pointersRef.current.has(key)) return;
-      pointersRef.current.set(key, e.pointerId);
-      el.setPointerCapture(e.pointerId);
+      if (!slot || !action) return;
+      if (pointersRef.current.has(slot)) return;
+      pointersRef.current.set(slot, e.pointerId);
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        // Algunos navegadores rechazan captures en pointers ya liberados.
+      }
       el.dataset.pressed = "true";
       if (!pressedRef.current.has(action)) {
         pressedRef.current.add(action);
         onInput(action, true);
       }
-      // Evita que el navegador interprete el toque como scroll/zoom.
       e.preventDefault();
     },
     [onInput],
@@ -72,12 +71,12 @@ export function TouchControls({ layout, actions, onInput }: Props) {
   const onPointerUp = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
       const el = e.currentTarget;
-      const key = el.dataset.key;
+      const slot = el.dataset.slot as SlotId | undefined;
       const action = el.dataset.action;
-      if (!key || !action) return;
-      const current = pointersRef.current.get(key);
+      if (!slot || !action) return;
+      const current = pointersRef.current.get(slot);
       if (current !== e.pointerId) return;
-      pointersRef.current.delete(key);
+      pointersRef.current.delete(slot);
       try {
         el.releasePointerCapture(e.pointerId);
       } catch {
@@ -91,142 +90,187 @@ export function TouchControls({ layout, actions, onInput }: Props) {
     },
     [onInput],
   );
-  const dpad = actions.dpad ?? [];
-  const buttons = actions.buttons ?? [];
-  const showUp = dpad.includes("up");
-  const showDown = dpad.includes("down");
-  const showLeft = dpad.includes("left");
-  const showRight = dpad.includes("right");
-  const dpadAction = DPAD_ACTION[layout];
-  const btnProps = { onPointerDown, onPointerUp };
+  const liveProps = { onPointerDown, onPointerUp };
   return (
-    <div className="touch-overlay" data-layout={layout}>
-      {dpad.length > 0 && (
-        <div
-          className="touch-dpad"
-          role="group"
-          aria-label="Controles de movimiento"
-        >
-          <div className="touch-dpad-row">
-            {showUp ? (
-              <TouchButton
-                className="touch-dpad-btn up"
-                ariaLabel={DPAD_ARIA.up}
-                dataKey="dpad-up"
-                dataAction={dpadAction.up}
-                {...btnProps}
-              >
-                {ARROWS.up}
-              </TouchButton>
-            ) : (
-              <span className="touch-dpad-spacer" aria-hidden />
-            )}
+    <div className="touch-controls" role="group" aria-label="Gamepad">
+      <div className="gp">
+        <div className="gp-body">
+          <div className="gp-col gp-col-left">
+            <div className="gp-dpad" aria-label="D-pad">
+              <DpadSlot
+                dir="up"
+                action={spec.dpad.up}
+                className="dp dp-up"
+                {...liveProps}
+              />
+              <DpadSlot
+                dir="right"
+                action={spec.dpad.right}
+                className="dp dp-right"
+                {...liveProps}
+              />
+              <DpadSlot
+                dir="down"
+                action={spec.dpad.down}
+                className="dp dp-down"
+                {...liveProps}
+              />
+              <DpadSlot
+                dir="left"
+                action={spec.dpad.left}
+                className="dp dp-left"
+                {...liveProps}
+              />
+              <div className="dp-hub" aria-hidden>
+                <span className="dp-hub-gem" />
+              </div>
+            </div>
           </div>
-          <div className="touch-dpad-row">
-            {showLeft ? (
-              <TouchButton
-                className="touch-dpad-btn left"
-                ariaLabel={DPAD_ARIA.left}
-                dataKey="dpad-left"
-                dataAction={dpadAction.left}
-                {...btnProps}
-              >
-                {ARROWS.left}
-              </TouchButton>
-            ) : (
-              <span className="touch-dpad-spacer" aria-hidden />
-            )}
-            <span className="touch-dpad-core" aria-hidden />
-            {showRight ? (
-              <TouchButton
-                className="touch-dpad-btn right"
-                ariaLabel={DPAD_ARIA.right}
-                dataKey="dpad-right"
-                dataAction={dpadAction.right}
-                {...btnProps}
-              >
-                {ARROWS.right}
-              </TouchButton>
-            ) : (
-              <span className="touch-dpad-spacer" aria-hidden />
-            )}
-          </div>
-          <div className="touch-dpad-row">
-            {showDown ? (
-              <TouchButton
-                className="touch-dpad-btn down"
-                ariaLabel={DPAD_ARIA.down}
-                dataKey="dpad-down"
-                dataAction={dpadAction.down}
-                {...btnProps}
-              >
-                {ARROWS.down}
-              </TouchButton>
-            ) : (
-              <span className="touch-dpad-spacer" aria-hidden />
-            )}
+          <div className="gp-col gp-col-right">
+            <div className="gp-actions">
+              <AbSlot
+                slot="b"
+                action={spec.buttons.b}
+                letter="B"
+                {...liveProps}
+              />
+              <AbSlot
+                slot="a"
+                action={spec.buttons.a}
+                letter="A"
+                {...liveProps}
+              />
+            </div>
           </div>
         </div>
-      )}
-      {buttons.length > 0 && (
-        <div
-          className="touch-actions"
-          role="group"
-          aria-label="Botones de acción"
-        >
-          {buttons.map((btn) => (
-            <TouchButton
-              key={btn.id}
-              className={`touch-action-btn ${btn.id === "shoot" ? "primary" : ""}`.trim()}
-              ariaLabel={btn.label}
-              dataKey={`btn-${btn.id}`}
-              dataAction={btn.id}
-              {...btnProps}
-            >
-              <span className="touch-action-label">{btn.label}</span>
-            </TouchButton>
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
-type ButtonProps = {
+type DpadProps = {
+  dir: "up" | "down" | "left" | "right";
+  action: TouchActionId;
+  className: string;
+  onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void;
+  onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => void;
+};
+function DpadSlot({
+  dir,
+  action,
+  className,
+  onPointerDown,
+  onPointerUp,
+}: DpadProps) {
+  const active = action !== null;
+  const label = describe(DPAD_SLOT_LABEL[dir], action);
+  return (
+    <GamepadSlot
+      slot={dir}
+      action={action}
+      active={active}
+      className={active ? className : `${className} gp-slot-off`}
+      ariaLabel={label}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+    >
+      <ArrowIcon dir={dir} />
+    </GamepadSlot>
+  );
+}
+type AbProps = {
+  slot: "a" | "b";
+  action: TouchActionId;
+  letter: "A" | "B";
+  onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void;
+  onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => void;
+};
+function AbSlot({ slot, action, letter, onPointerDown, onPointerUp }: AbProps) {
+  const active = action !== null;
+  const base = `ab ${slot}`;
+  const className = active ? base : `${base} gp-slot-off`;
+  const label = describe(letter, action);
+  return (
+    <GamepadSlot
+      slot={slot}
+      action={action}
+      active={active}
+      className={className}
+      ariaLabel={label}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+    >
+      <span className="ab-ring" aria-hidden />
+      <span className="ab-letter">{letter}</span>
+    </GamepadSlot>
+  );
+}
+type SlotProps = {
+  slot: SlotId;
+  action: TouchActionId;
+  active: boolean;
   className: string;
   ariaLabel: string;
-  dataKey: string;
-  dataAction: string;
   onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void;
   onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => void;
   children: React.ReactNode;
 };
-function TouchButton({
+function GamepadSlot({
+  slot,
+  action,
+  active,
   className,
   ariaLabel,
-  dataKey,
-  dataAction,
   onPointerDown,
   onPointerUp,
   children,
-}: ButtonProps) {
+}: SlotProps) {
+  if (!active) {
+    return (
+      <button
+        type="button"
+        className={className}
+        aria-label={ariaLabel}
+        aria-disabled="true"
+        tabIndex={-1}
+        data-slot={slot}
+        data-inert="true"
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {children}
+      </button>
+    );
+  }
   return (
     <button
       type="button"
       className={className}
       aria-label={ariaLabel}
-      data-key={dataKey}
-      data-action={dataAction}
+      data-slot={slot}
+      data-action={action ?? ""}
       data-pressed="false"
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       onLostPointerCapture={onPointerUp}
-      // Un clic de ratón accidental no debe retener el foco (compete con el teclado).
       onClick={(e) => e.currentTarget.blur()}
-      // Evita menú contextual en long-press en móvil.
       onContextMenu={(e) => e.preventDefault()}
     >
       {children}
     </button>
+  );
+}
+function ArrowIcon({ dir }: { dir: "up" | "down" | "left" | "right" }) {
+  const path =
+    dir === "up"
+      ? "M12 4 L20 16 L4 16 Z"
+      : dir === "right"
+        ? "M8 4 L20 12 L8 20 Z"
+        : dir === "down"
+          ? "M4 8 L20 8 L12 20 Z"
+          : "M16 4 L16 20 L4 12 Z";
+  return (
+    <svg className="dp-arrow" viewBox="0 0 24 24" aria-hidden>
+      <path d={path} fill="currentColor" />
+    </svg>
   );
 }
