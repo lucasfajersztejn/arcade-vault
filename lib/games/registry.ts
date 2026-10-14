@@ -106,6 +106,11 @@ export const ENGINES: Record<string, EngineEntry> = {
     Controls: FroggerControls,
     hasLives: true,
     ariaLabel: "Juego Frogger en curso",
+    skins: SKIN_IDS,
+    touchActions: {
+      dpad: { up: "up", down: "down", left: "left", right: "right" },
+      buttons: { a: null, b: null },
+    },
   },
   snake: {
     Canvas: SnakeCanvas,
