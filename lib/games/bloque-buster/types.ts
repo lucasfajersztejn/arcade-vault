@@ -1,3 +1,4 @@
+import type { BloqueBusterPalette } from "./skins";
 export type BloqueBusterCallbacks = {
   onScore: (score: number) => void;
   onLives: (lives: number) => void;
@@ -8,6 +9,11 @@ export type BloqueBusterCallbacks = {
   /** Cambios de pausa que origina el motor (pestaña oculta, ventana sin foco o tecla P/Esc). */
   onPause?: (paused: boolean) => void;
 };
+/** Opciones de arranque del motor. */
+export type BloqueBusterOptions = {
+  /** Paleta inicial; si falta, se usa la skin por defecto (`clasico`). */
+  palette?: BloqueBusterPalette;
+};
 export type BloqueBusterEngine = {
   pause: () => void;
   resume: () => void;
@@ -17,4 +23,6 @@ export type BloqueBusterEngine = {
   end: () => void;
   /** Cancela el bucle y quita todos los listeners. */
   destroy: () => void;
+  /** Cambia la paleta en vivo y repinta sin tocar score, vidas, nivel ni posiciones. */
+  setPalette: (palette: BloqueBusterPalette) => void;
 };

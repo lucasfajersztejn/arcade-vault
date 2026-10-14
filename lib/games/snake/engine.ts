@@ -10,8 +10,9 @@ import {
   type Dir,
   type Fruit,
 } from "./entities";
+import { SKINS, type SnakePalette } from "./skins";
 import { drawFruit, loadFruits } from "./sprites";
-import type { SnakeCallbacks, SnakeEngine } from "./types";
+import type { SnakeCallbacks, SnakeEngine, SnakeOptions } from "./types";
 type State = "playing" | "gameover";
 /** Teclas de giro: el juego las consume (y evita su comportamiento por defecto, el scroll). */
 const TURN_KEYS: Record<string, Dir> = {
@@ -42,6 +43,7 @@ function isInteractive(target: EventTarget | null) {
 export function createSnake(
   canvas: HTMLCanvasElement,
   callbacks: SnakeCallbacks,
+  options?: SnakeOptions,
 ): SnakeEngine {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -52,8 +54,10 @@ export function createSnake(
       restart: noop,
       end: noop,
       destroy: noop,
+      setPalette: noop,
     };
   }
+  let palette: SnakePalette = options?.palette ?? SKINS.clasico;
   canvas.width = SIZE;
   canvas.height = SIZE;
   // ── Estado del juego ────────────────────────────────────────────────────────
@@ -127,20 +131,21 @@ export function createSnake(
   function drawBoard(c: CanvasRenderingContext2D) {
     for (let row = 0; row < GRID; row++) {
       for (let col = 0; col < GRID; col++) {
-        c.fillStyle = (row + col) % 2 === 0 ? "#05070d" : "#080c16";
+        c.fillStyle =
+          (row + col) % 2 === 0 ? palette.tileDark : palette.tileLight;
         c.fillRect(col * CELL, row * CELL, CELL, CELL);
       }
     }
     // Las paredes matan: el borde del tablero se ve siempre.
-    c.strokeStyle = "rgba(0, 255, 136, 0.8)";
+    c.strokeStyle = palette.border;
     c.lineWidth = 2;
     c.strokeRect(1, 1, SIZE - 2, SIZE - 2);
   }
   /** Baldosa oscura bajo la fruta: las frutas verdes no se pierden contra la serpiente. */
   function drawFruitTile(c: CanvasRenderingContext2D, f: Fruit) {
-    c.fillStyle = "#12172a";
+    c.fillStyle = palette.fruitTile;
     c.fillRect(f.col * CELL + 1, f.row * CELL + 1, CELL - 2, CELL - 2);
-    c.strokeStyle = "rgba(255, 255, 255, 0.18)";
+    c.strokeStyle = palette.fruitTileEdge;
     c.lineWidth = 1;
     c.strokeRect(f.col * CELL + 1.5, f.row * CELL + 1.5, CELL - 3, CELL - 3);
   }
@@ -150,14 +155,14 @@ export function createSnake(
     for (let i = last; i >= 0; i--) {
       const s = segments[i];
       const lightness = i === 0 ? 72 : 50 - 20 * (i / Math.max(last, 1));
-      c.fillStyle = `hsl(150 100% ${lightness}%)`;
+      c.fillStyle = `hsl(${palette.snakeHue} ${palette.snakeSat}% ${lightness}%)`;
       c.fillRect(s.col * CELL + 2, s.row * CELL + 2, CELL - 4, CELL - 4);
     }
     const head = segments[0];
     const cx = head.col * CELL + CELL / 2;
     const cy = head.row * CELL + CELL / 2;
     const f = FORWARD[dir];
-    c.fillStyle = "#05070d";
+    c.fillStyle = palette.eye;
     for (const side of [-1, 1]) {
       // Ojos hacia delante y a cada lado de la cabeza.
       const ex = cx + f.col * 6 + -f.row * 6 * side;
@@ -248,6 +253,11 @@ export function createSnake(
       togglePause();
     }
   };
+  function setPalette(p: SnakePalette) {
+    palette = p;
+    // Repinta aun en pausa / game over: cambiar skin no debe tocar el estado.
+    draw();
+  }
   function destroy() {
     if (destroyed) return;
     destroyed = true;
@@ -271,5 +281,5 @@ export function createSnake(
     .catch((err) => {
       if (!destroyed) console.error(err);
     });
-  return { pause, resume, restart, end, destroy };
+  return { pause, resume, restart, end, destroy, setPalette };
 }

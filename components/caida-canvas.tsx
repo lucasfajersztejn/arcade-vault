@@ -8,19 +8,25 @@ import {
 } from "react";
 import { BLOCK, COLS, NEXT_SIZE, ROWS } from "@/lib/games/caida/constants";
 import { createCaida } from "@/lib/games/caida/engine";
+import { SKINS } from "@/lib/games/caida/skins";
 import type { CaidaCallbacks, CaidaEngine } from "@/lib/games/caida/types";
+import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
 export type CaidaHandle = Pick<
   CaidaEngine,
   "pause" | "resume" | "restart" | "end"
 >;
 /** Las líneas solo se ven en el panel interior: no salen al HUD de la plataforma. */
-type Props = Omit<CaidaCallbacks, "onLines"> & { ref?: Ref<CaidaHandle> };
+type Props = Omit<CaidaCallbacks, "onLines"> & {
+  ref?: Ref<CaidaHandle>;
+  skin?: SkinId;
+};
 const format = (n: number) => n.toLocaleString("es-ES");
-export function CaidaCanvas({ ref, ...callbacks }: Props) {
+export function CaidaCanvas({ ref, skin = DEFAULT_SKIN, ...callbacks }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nextRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<CaidaEngine | null>(null);
   const callbacksRef = useRef(callbacks);
+  const skinRef = useRef(skin);
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState(0);
   const [level, setLevel] = useState(1);
@@ -28,6 +34,13 @@ export function CaidaCanvas({ ref, ...callbacks }: Props) {
   useEffect(() => {
     callbacksRef.current = callbacks;
   });
+  useEffect(() => {
+    skinRef.current = skin;
+  });
+  // La paleta cambia en vivo sin recrear el motor (igual que los callbacks).
+  useEffect(() => {
+    engineRef.current?.setPalette(SKINS[skin]);
+  }, [skin]);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -46,7 +59,10 @@ export function CaidaCanvas({ ref, ...callbacks }: Props) {
         onGameOver: (v) => callbacksRef.current.onGameOver(v),
         onPause: (v) => callbacksRef.current.onPause?.(v),
       },
-      { nextCanvas: nextRef.current ?? undefined },
+      {
+        nextCanvas: nextRef.current ?? undefined,
+        palette: SKINS[skinRef.current],
+      },
     );
     engineRef.current = engine;
     return () => {
