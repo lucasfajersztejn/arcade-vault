@@ -99,7 +99,10 @@ export async function signInWithProvider(input: {
     },
   });
   if (error || !data.url) {
-    return { ok: false, error: error?.message ?? "No se pudo iniciar OAuth." };
+    return {
+      ok: false,
+      error: mapAuthError(error?.message ?? "No se pudo iniciar OAuth."),
+    };
   }
   return { ok: true, url: data.url };
 }
@@ -117,5 +120,6 @@ function mapAuthError(message: string): string {
   if (m.includes("rate limit")) {
     return "Demasiados intentos. Espera un momento y vuelve a probar.";
   }
-  return message;
+  console.error("[auth] unmapped", message);
+  return "No se pudo completar la operación. Vuelve a intentarlo.";
 }
