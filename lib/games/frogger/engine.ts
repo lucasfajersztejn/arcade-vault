@@ -125,9 +125,33 @@ export function createFrogger(
   let running = false;
   let rafId = 0;
   let lastTime: number | null = null;
+  // Guardas para evitar re-renders redundantes del HUD compartido.
+  // Se reinician a un valor imposible en `initGame()` para que el primer emit siempre pase.
+  let lastEmittedScore = -1;
+  let lastEmittedLives = -1;
+  let lastEmittedLevel = -1;
+  let lastEmittedPaused: boolean | null = null;
   // ---------------------------------------------------------------- estado
   function emitScore(): void {
-    callbacks.onScore(Math.min(score, MAX_SCORE));
+    const next = Math.min(score, MAX_SCORE);
+    if (next === lastEmittedScore) return;
+    lastEmittedScore = next;
+    callbacks.onScore(next);
+  }
+  function emitLives(): void {
+    if (lives === lastEmittedLives) return;
+    lastEmittedLives = lives;
+    callbacks.onLives(lives);
+  }
+  function emitLevel(): void {
+    if (level === lastEmittedLevel) return;
+    lastEmittedLevel = level;
+    callbacks.onLevel(level);
+  }
+  function emitPaused(next: boolean): void {
+    if (next === lastEmittedPaused) return;
+    lastEmittedPaused = next;
+    callbacks.onPause?.(next);
   }
   function resetFrog(): void {
     frog = createFrog();
@@ -147,9 +171,15 @@ export function createFrogger(
     state = "playing";
     started = false;
     startRound(1);
+    // Reset de las guardas: el reinicio sí debe propagar los valores al HUD aunque
+    // coincidan con los del game anterior (p. ej. 3 vidas → 3 vidas).
+    lastEmittedScore = -1;
+    lastEmittedLives = -1;
+    lastEmittedLevel = -1;
+    lastEmittedPaused = null;
     emitScore();
-    callbacks.onLives(lives);
-    callbacks.onLevel(level);
+    emitLives();
+    emitLevel();
   }
   function gameOver(): void {
     state = "gameover";
@@ -160,7 +190,7 @@ export function createFrogger(
   function killFrog(): void {
     if (state === "gameover") return;
     lives = Math.max(0, lives - 1);
-    callbacks.onLives(lives);
+    emitLives();
     if (lives <= 0) {
       gameOver();
       return;
@@ -174,7 +204,7 @@ export function createFrogger(
     score += POINTS_ROUND;
     emitScore();
     startRound(level + 1);
-    callbacks.onLevel(level);
+    emitLevel();
   }
   /** Aterrizaje en la fila de metas: boca libre puntúa, boca ocupada u orilla mata. */
   function resolveGoal(): void {
@@ -613,16 +643,16 @@ export function createFrogger(
   function togglePause(): void {
     if (paused) {
       resume();
-      callbacks.onPause?.(false);
+      emitPaused(false);
     } else {
       pause();
-      callbacks.onPause?.(true);
+      emitPaused(true);
     }
   }
   function onAutoPause(): void {
     if (destroyed || paused || state === "gameover") return;
     pause();
-    callbacks.onPause?.(true);
+    emitPaused(true);
   }
   function onVisibility(): void {
     if (document.hidden) onAutoPause();
