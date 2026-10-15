@@ -1,6 +1,6 @@
 # SPEC 14 — Autenticación y cuentas de usuario
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 04 (`specs/04-integracion-supabase.md`) por el cliente Supabase y las variables de entorno; SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por la tabla `scores` y el leaderboard
 **Fecha:** 2026-10-15
 **Objetivo:** Reemplazar el `av_user` de `localStorage` por una autenticación real con Supabase Auth (email + password con verificación obligatoria, más OAuth de Google y GitHub) y vincular cada score nuevo al usuario autenticado.
