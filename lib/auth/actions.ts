@@ -76,25 +76,9 @@ export async function requestPasswordReset(input: {
   if (!EMAIL_RE.test(email)) return { ok: false, error: "Correo no válido." };
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl()}/update-password`,
+    redirectTo: `${siteUrl()}/auth/callback?next=/update-password`,
   });
   // No distinguimos "existe/no existe" para no filtrar la base de usuarios.
-  if (error) return { ok: false, error: mapAuthError(error.message) };
-  return { ok: true };
-}
-export async function updatePassword(input: {
-  password: string;
-}): Promise<AuthResult> {
-  if (input.password.length < PASSWORD_MIN) {
-    return {
-      ok: false,
-      error: `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres.`,
-    };
-  }
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({
-    password: input.password,
-  });
   if (error) return { ok: false, error: mapAuthError(error.message) };
   return { ok: true };
 }

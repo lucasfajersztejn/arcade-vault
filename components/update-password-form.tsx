@@ -1,7 +1,8 @@
 "use client";
 import { useId, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { updatePassword } from "@/lib/auth/actions";
+import { createClient } from "@/lib/supabase/client";
+const PASSWORD_MIN = 8;
 export function UpdatePasswordForm() {
   const router = useRouter();
   const uid = useId();
@@ -12,14 +13,24 @@ export function UpdatePasswordForm() {
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (password.length < PASSWORD_MIN) {
+      setError(`La contraseña debe tener al menos ${PASSWORD_MIN} caracteres.`);
+      return;
+    }
     if (password !== confirm) {
       setError("Las contraseñas no coinciden.");
       return;
     }
     startTransition(async () => {
-      const result = await updatePassword({ password });
-      if (!result.ok) {
-        setError(result.error);
+      // La actualización se hace desde el navegador: `supabase.auth.updateUser`
+      // va directo a supabase.co usando la sesión de recovery depositada por
+      // /auth/callback. Así la contraseña nunca viaja por nuestro Next server.
+      const supabase = createClient();
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
+      if (updateError) {
+        setError(updateError.message);
         return;
       }
       router.replace("/");
@@ -55,9 +66,9 @@ export function UpdatePasswordForm() {
               placeholder="••••••••"
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={PASSWORD_MIN}
             />
-            <small className="hint">Mínimo 8 caracteres.</small>
+            <small className="hint">Mínimo {PASSWORD_MIN} caracteres.</small>
           </div>
           <div className="field">
             <label htmlFor={`${uid}-pass2`}>Repite la contraseña</label>
@@ -69,7 +80,7 @@ export function UpdatePasswordForm() {
               placeholder="••••••••"
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={PASSWORD_MIN}
             />
           </div>
           {error ? (
