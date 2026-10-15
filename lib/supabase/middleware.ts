@@ -8,6 +8,8 @@ import type { Database } from "./database.types";
  * cookies de la request/response, llama a `auth.getUser()` para disparar el
  * refresco de tokens y devuelve la response con las cookies actualizadas.
  */
+const PROTECTED_PREFIXES = ["/update-password"];
+const GUEST_ONLY_PREFIXES = ["/login", "/register"];
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { url, publishableKey } = getSupabaseEnv();
@@ -27,6 +29,21 @@ export async function updateSession(request: NextRequest) {
       },
     },
   });
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { pathname } = request.nextUrl;
+  if (!user && PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    redirectUrl.searchParams.set("redirectTo", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+  if (user && GUEST_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
+  }
   return response;
 }
