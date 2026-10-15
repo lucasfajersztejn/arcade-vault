@@ -98,6 +98,9 @@ export function createFrogger(
   bgCanvas.width = CANVAS_W;
   bgCanvas.height = CANVAS_H;
   const bgCtx = bgCanvas.getContext("2d") as CanvasRenderingContext2D;
+  // Sprites prerrenderizados por `(kind, width, tint, dir)`. Se vacían con cada cambio
+  // de paleta: `drawLanes` los repone perezosamente la primera vez que los necesita.
+  const spriteCache = new Map<string, HTMLCanvasElement>();
   let palette: FroggerPalette = options.palette ?? SKINS.clasico;
   let lanes: Lane[] = [];
   let frog: Frog = createFrog();
@@ -442,20 +445,71 @@ export function createFrogger(
       target.fillRect(cx - 3, cy - CELL / 2 + 3, 6, 5);
     }
   }
+  /** Crea un canvas offscreen `width*CELL × CELL` listo para pintar un sprite dentro. */
+  function makeSpriteCanvas(width: number): {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+  } {
+    const sprite = document.createElement("canvas");
+    sprite.width = width * CELL;
+    sprite.height = CELL;
+    return {
+      canvas: sprite,
+      ctx: sprite.getContext("2d") as CanvasRenderingContext2D,
+    };
+  }
+  /**
+   * Devuelve el sprite cacheado para esta combinación, generándolo con `paint*` la primera
+   * vez. Como `paint*` dibujan relativo a `(offsetX, offsetY)`, aquí llamamos con `(0, 0)`.
+   */
+  function getSprite(
+    key: string,
+    width: number,
+    paint: (
+      target: CanvasRenderingContext2D,
+      offsetX: number,
+      offsetY: number,
+    ) => void,
+  ): HTMLCanvasElement {
+    const cached = spriteCache.get(key);
+    if (cached) return cached;
+    const { canvas: sprite, ctx: spriteCtx } = makeSpriteCanvas(width);
+    paint(spriteCtx, 0, 0);
+    spriteCache.set(key, sprite);
+    return sprite;
+  }
   function drawLanes(): void {
     for (const lane of lanes) {
+      const dir = lane.dir;
       for (const entity of lane.entities) {
         const x = px(entity.col);
         const y = py(lane.row);
+        let sprite: HTMLCanvasElement;
         if (entity.kind === "car") {
-          paintCar(ctx, x, y, entity.width, entity.tint ?? 0, lane.dir);
+          const tint = (entity.tint ?? 0) % 3;
+          sprite = getSprite(
+            `car:${entity.width}:${tint}:${dir}`,
+            entity.width,
+            (c, ox, oy) => paintCar(c, ox, oy, entity.width, tint, dir),
+          );
         } else if (entity.kind === "truck") {
-          paintTruck(ctx, x, y, entity.width, lane.dir);
+          sprite = getSprite(
+            `truck:${entity.width}:${dir}`,
+            entity.width,
+            (c, ox, oy) => paintTruck(c, ox, oy, entity.width, dir),
+          );
         } else if (entity.kind === "log") {
-          paintLog(ctx, x, y, entity.width);
+          sprite = getSprite(`log:${entity.width}`, entity.width, (c, ox, oy) =>
+            paintLog(c, ox, oy, entity.width),
+          );
         } else {
-          paintTurtles(ctx, x, y, entity.width);
+          sprite = getSprite(
+            `turtle:${entity.width}`,
+            entity.width,
+            (c, ox, oy) => paintTurtles(c, ox, oy, entity.width),
+          );
         }
+        ctx.drawImage(sprite, x, y);
       }
     }
   }
@@ -616,6 +670,7 @@ export function createFrogger(
   }
   function setPalette(next: FroggerPalette): void {
     palette = next;
+    spriteCache.clear();
     rebuildBackground();
     draw();
   }
