@@ -47,6 +47,22 @@ Verificación posterior pendiente (humo manual):
 - `curl -sI http://localhost:3000/` muestra los tres headers.
 - 11 signups desde una IP en una hora devuelve `429`.
 
+---
+
+## Aplicado — 2026-10-15 (SPEC 16)
+
+- **`mapAuthError` como embudo único** (`lib/auth/actions.ts`): fallback genérico (`"No se pudo completar la operación. Vuelve a intentarlo."`) y `console.error("[auth] unmapped", ...)` en servidor. `signInWithProvider` también enruta por `mapAuthError`.
+- **`requestPasswordReset` anti-enumeración** (`lib/auth/actions.ts`): siempre devuelve `{ ok: true }` cuando el email es sintácticamente válido; el error real queda sólo en `console.error("[auth] reset", ...)`.
+- **`safeReturnTo` con allowlist cerrada** (`lib/auth/return-to.ts`): nuevo `ALLOWED_RETURN_TO_PREFIXES` (`/`, `/games`, `/salon`, `/about`, `/update-password`, `/login`, `/register`). Match por prefijo exacto o seguido de `/`; rutas no listadas caen al fallback.
+- **Rate limit propio por IP** (`lib/auth/rate-limit.ts` + `lib/auth/actions.ts`): sliding window en memoria con `checkRateLimit(bucket, limit, windowMs)` y `getClientIp()` sobre `x-forwarded-for`. Límites por IP: `signIn` 10/10min, `signUp` 5/h, `requestPasswordReset` 5/h, `signInWithProvider` 20/h.
+
+Verificación posterior pendiente (humo manual):
+
+- Forzar un error de Supabase → UI muestra el genérico y stderr contiene `[auth] unmapped`.
+- `requestPasswordReset` con email no registrado → mismo mensaje neutral en UI; sin correo enviado.
+- 11 `signIn` desde la misma IP en <10 min → el 11º devuelve el mensaje de rate limit sin pegarle a Supabase.
+- `safeReturnTo("/admin")`, `safeReturnTo("/api/x")` → fallback `/`; `safeReturnTo("/games/snake")` → se mantiene.
+
 
 
 | name                                               | title                                                 | level | facing   | categories   | description                                                                                                                                                                                                              | detail                                                                                                                                                                                                                               | remediation                                                                                                            | metadata                                                                                                 | cache_key                                                                  | observed_at              |

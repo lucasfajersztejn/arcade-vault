@@ -1,6 +1,6 @@
 # SPEC 16 — Hardening de Auth: fuga de errores, enumeración y rate limit propio
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 14 (`specs/14-auth-y-cuentas-de-usuario.md`) por Supabase Auth, `profiles` y las Server Actions de `lib/auth/actions.ts`; SPEC 15 (`specs/15-seguridad-basica.md`) por la base de seguridad (RLS, headers, rate limits de Supabase a nivel dashboard)
 **Fecha:** 2026-10-15
 **Objetivo:** Cerrar los huecos detectados en la revisión manual del plugin `security-guidance` sobre `lib/auth/*` y `components/login-form.tsx`: dejar de filtrar texto crudo de errores del backend al cliente, impedir enumeración de usuarios vía el reset de contraseña, endurecer `safeReturnTo` ante rutas internas no previstas y añadir un rate limit propio por IP sobre las Server Actions sensibles — sin tocar la mecánica de los juegos ni el contrato motor ↔ plataforma.
