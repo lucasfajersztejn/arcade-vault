@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
+import { memo, useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import { CANVAS_H, CANVAS_W } from "@/lib/games/frogger/constants";
 import { createFrogger } from "@/lib/games/frogger/engine";
 import { SKINS } from "@/lib/games/frogger/skins";
@@ -73,7 +73,7 @@ export function FroggerCanvas({
   );
 }
 /** Leyenda de teclas bajo la pantalla (solo informativa; en móvil se usa el overlay táctil). */
-export function FroggerControls() {
+export const FroggerControls = memo(function FroggerControls() {
   return (
     <ul className="controls-legend" aria-label="Controles">
       <li>
@@ -91,4 +91,4 @@ export function FroggerControls() {
       </li>
     </ul>
   );
-}
+});

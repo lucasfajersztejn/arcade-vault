@@ -1057,6 +1057,12 @@ a {
     aspect-ratio: 1 / 1;
   }
 }
+/* El marco CRT adopta la proporción del tablero de Frogger (640x560) en desktop
+   para que no queden franjas negras laterales; en móvil el bloque de más abajo
+   libera el aspect-ratio para que el flex-1 controle el alto. */
+.crt-screen:has(> .frogger-canvas) {
+  aspect-ratio: 8 / 7;
+}
 /* frogger: tablero vertical 8:7 (640x560) centrado en la pantalla 4:3; en móvil la pantalla adopta su relación */
 .frogger-canvas {
   display: block;
