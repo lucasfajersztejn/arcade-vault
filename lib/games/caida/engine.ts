@@ -1,9 +1,11 @@
 import {
   BLOCK,
   COLS,
+  GHOST_ALPHA,
   HARD_DROP_POINTS,
   MAX_DT,
   MAX_SCORE,
+  NEXT_GRID,
   NEXT_SIZE,
   ROWS,
   SOFT_DROP_POINTS,
@@ -11,11 +13,6 @@ import {
 import {
   clearLines,
   collide,
-  drawBoard,
-  drawGhost,
-  drawGrid,
-  drawNext,
-  drawPiece,
   dropIntervalForLevel,
   ghostY,
   levelForLines,
@@ -57,8 +54,8 @@ export function createCaida(
   callbacks: CaidaCallbacks,
   opts: CaidaOptions = {},
 ): CaidaEngine {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
+  const ctx2d = canvas.getContext("2d");
+  if (!ctx2d) {
     const noop = () => {};
     return {
       pause: noop,
@@ -70,6 +67,8 @@ export function createCaida(
       setInput: noop,
     };
   }
+  // Alias ya estrechado: TypeScript no conserva el narrow dentro del closure.
+  const ctx: CanvasRenderingContext2D = ctx2d;
   canvas.width = COLS * BLOCK;
   canvas.height = ROWS * BLOCK;
   const { nextCanvas } = opts;
@@ -78,6 +77,102 @@ export function createCaida(
   if (nextCanvas) {
     nextCanvas.width = NEXT_SIZE;
     nextCanvas.height = NEXT_SIZE;
+  }
+  // ── Fondo offscreen cacheado (patrón SPEC 13) ──────────────────────────────
+  // Pinta fondo + rejilla una sola vez por paleta; el loop lo copia con un
+  // drawImage por frame en lugar de repintar strokes línea a línea.
+  const bgCanvas = document.createElement("canvas");
+  bgCanvas.width = COLS * BLOCK;
+  bgCanvas.height = ROWS * BLOCK;
+  const bgCtx = bgCanvas.getContext("2d") as CanvasRenderingContext2D;
+  function rebuildBackground(): void {
+    bgCtx.fillStyle = palette.bg;
+    bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+    bgCtx.strokeStyle = palette.grid;
+    bgCtx.lineWidth = 0.5;
+    for (let c = 1; c < COLS; c++) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(c * BLOCK, 0);
+      bgCtx.lineTo(c * BLOCK, ROWS * BLOCK);
+      bgCtx.stroke();
+    }
+    for (let r = 1; r < ROWS; r++) {
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, r * BLOCK);
+      bgCtx.lineTo(COLS * BLOCK, r * BLOCK);
+      bgCtx.stroke();
+    }
+  }
+  // ── Sprite cache perezoso (patrón SPEC 13) ─────────────────────────────────
+  // Un sprite BLOCK×BLOCK por índice de color de pieza. Se invalida con
+  // `spriteCache.clear()` sólo en `setPalette`.
+  const spriteCache = new Map<string, HTMLCanvasElement>();
+  function getBlockSprite(colorIndex: number): HTMLCanvasElement {
+    const key = `block:${colorIndex}`;
+    const hit = spriteCache.get(key);
+    if (hit) return hit;
+    const sprite = document.createElement("canvas");
+    sprite.width = BLOCK;
+    sprite.height = BLOCK;
+    const sctx = sprite.getContext("2d") as CanvasRenderingContext2D;
+    sctx.fillStyle = palette.pieceColors[colorIndex] as string;
+    sctx.fillRect(1, 1, BLOCK - 2, BLOCK - 2);
+    sctx.fillStyle = palette.gloss;
+    sctx.fillRect(1, 1, BLOCK - 2, 4);
+    spriteCache.set(key, sprite);
+    return sprite;
+  }
+  function drawCell(
+    target: CanvasRenderingContext2D,
+    col: number,
+    row: number,
+    colorIndex: number,
+    alpha: number,
+  ): void {
+    if (!colorIndex) return;
+    const sprite = getBlockSprite(colorIndex);
+    if (alpha !== 1) target.globalAlpha = alpha;
+    target.drawImage(sprite, col * BLOCK, row * BLOCK);
+    if (alpha !== 1) target.globalAlpha = 1;
+  }
+  function drawBoardCached(): void {
+    for (let r = 0; r < ROWS; r++) {
+      const row = board[r];
+      for (let c = 0; c < COLS; c++) {
+        const v = row[c];
+        if (v) drawCell(ctx, c, r, v, 1);
+      }
+    }
+  }
+  function drawPieceCached(piece: Piece, y: number, alpha: number): void {
+    const { shape } = piece;
+    for (let r = 0; r < shape.length; r++) {
+      for (let c = 0; c < shape[r].length; c++) {
+        const v = shape[r][c];
+        if (v) drawCell(ctx, piece.x + c, y + r, v, alpha);
+      }
+    }
+  }
+  function drawGhostCached(piece: Piece): void {
+    drawPieceCached(piece, ghostY(board, piece), GHOST_ALPHA);
+  }
+  function drawNextCached(piece: Piece): void {
+    if (!nextCtx) return;
+    nextCtx.clearRect(0, 0, NEXT_SIZE, NEXT_SIZE);
+    nextCtx.fillStyle = palette.bg;
+    nextCtx.fillRect(0, 0, NEXT_SIZE, NEXT_SIZE);
+    const { shape } = piece;
+    const offX = Math.floor((NEXT_GRID - shape[0].length) / 2);
+    const offY = Math.floor((NEXT_GRID - shape.length) / 2);
+    for (let r = 0; r < shape.length; r++) {
+      for (let c = 0; c < shape[r].length; c++) {
+        const v = shape[r][c];
+        if (v) {
+          const sprite = getBlockSprite(v);
+          nextCtx.drawImage(sprite, (offX + c) * BLOCK, (offY + r) * BLOCK);
+        }
+      }
+    }
   }
   // ── Estado del juego ────────────────────────────────────────────────────────
   let board: Board;
@@ -94,12 +189,39 @@ export function createCaida(
   let running = false;
   let rafId = 0;
   let lastTime: number | null = null;
+  // ── Guardas de emisión al HUD (patrón SPEC 13) ──────────────────────────────
+  // Evitan re-renders en React cuando el valor no cambió. `onGameOver` NUNCA
+  // se filtra: es terminal y lo lee el modal.
+  let lastEmittedScore = -1;
+  let lastEmittedLines = -1;
+  let lastEmittedLevel = -1;
+  let lastEmittedPaused: boolean | null = null;
+  function emitScore(next: number): void {
+    if (next === lastEmittedScore) return;
+    lastEmittedScore = next;
+    callbacks.onScore(next);
+  }
+  function emitLines(next: number): void {
+    if (next === lastEmittedLines) return;
+    lastEmittedLines = next;
+    callbacks.onLines(next);
+  }
+  function emitLevel(next: number): void {
+    if (next === lastEmittedLevel) return;
+    lastEmittedLevel = next;
+    callbacks.onLevel(next);
+  }
+  function emitPaused(next: boolean): void {
+    if (next === lastEmittedPaused) return;
+    lastEmittedPaused = next;
+    callbacks.onPause?.(next);
+  }
   const isOver = () => state === "gameover";
   const accepting = () => !destroyed && !paused && !isOver();
   function addScore(points: number) {
     if (points <= 0) return;
     score = Math.min(score + points, MAX_SCORE);
-    callbacks.onScore(score);
+    emitScore(score);
   }
   function gameOver() {
     state = "gameover";
@@ -109,7 +231,7 @@ export function createCaida(
   function spawn() {
     current = next;
     next = randomPiece();
-    if (nextCtx) drawNext(nextCtx, next, palette);
+    drawNextCached(next);
     if (collide(board, current.shape, current.x, current.y)) gameOver();
   }
   function lockPiece() {
@@ -121,8 +243,8 @@ export function createCaida(
       lines += cleared;
       level = levelForLines(lines);
       dropInterval = dropIntervalForLevel(level);
-      callbacks.onLines(lines);
-      callbacks.onLevel(level);
+      emitLines(lines);
+      emitLevel(level);
     }
     spawn();
   }
@@ -134,11 +256,17 @@ export function createCaida(
     dropInterval = dropIntervalForLevel(1);
     dropAccum = 0;
     state = "playing";
+    // Reset de guardas ANTES de los primeros emits: un restart propaga aunque
+    // los valores coincidan con los de la partida anterior.
+    lastEmittedScore = -1;
+    lastEmittedLines = -1;
+    lastEmittedLevel = -1;
+    lastEmittedPaused = null;
     next = randomPiece();
     spawn();
-    callbacks.onScore(score);
-    callbacks.onLines(lines);
-    callbacks.onLevel(level);
+    emitScore(score);
+    emitLines(lines);
+    emitLevel(level);
   }
   // ── Acciones del jugador ────────────────────────────────────────────────────
   function move(dx: number) {
@@ -168,10 +296,10 @@ export function createCaida(
     if (e.code === "KeyP") {
       if (paused) {
         resume();
-        callbacks.onPause?.(false);
+        emitPaused(false);
       } else {
         pause();
-        callbacks.onPause?.(true);
+        emitPaused(true);
       }
       return;
     }
@@ -210,14 +338,11 @@ export function createCaida(
     }
   }
   function draw() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = palette.bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawGrid(ctx, palette);
-    drawBoard(ctx, board, palette);
-    drawGhost(ctx, board, current, palette);
-    drawPiece(ctx, current, current.y, palette);
+    // Fondo + rejilla ya horneados en bgCanvas; un drawImage por frame.
+    ctx.drawImage(bgCanvas, 0, 0);
+    drawBoardCached();
+    drawGhostCached(current);
+    drawPieceCached(current, current.y, 1);
   }
   // ── Bucle principal ─────────────────────────────────────────────────────────
   function frame(ts: number) {
@@ -267,8 +392,12 @@ export function createCaida(
   function setPalette(p: CaidaPalette) {
     if (destroyed) return;
     palette = p;
+    // Invalidar cachés dependientes de color ANTES del próximo draw: si no,
+    // la primera frame tras cambiar skin mezcla fondo viejo con sprites nuevos.
+    spriteCache.clear();
+    rebuildBackground();
     draw();
-    if (nextCtx) drawNext(nextCtx, next, palette);
+    drawNextCached(next);
   }
   // Entrada táctil: cada acción equivale a una pulsación de tecla, por eso
   // ignoramos `pressed = false` y disparamos la acción al `true`.
@@ -308,7 +437,7 @@ export function createCaida(
   function onAutoPause() {
     if (!accepting()) return;
     pause();
-    callbacks.onPause?.(true);
+    emitPaused(true);
   }
   function onVisibility() {
     if (document.hidden) onAutoPause();
@@ -316,6 +445,7 @@ export function createCaida(
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("blur", onAutoPause);
   document.addEventListener("visibilitychange", onVisibility);
+  rebuildBackground();
   initGame();
   // Pinta el estado inicial de forma síncrona: si Chrome Android cancela el
   // primer `requestAnimationFrame`, el tablero no queda en negro.

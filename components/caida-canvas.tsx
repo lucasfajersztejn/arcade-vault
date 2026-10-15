@@ -1,5 +1,6 @@
 "use client";
 import {
+  memo,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -144,6 +145,6 @@ export function CaidaCanvas({ ref, skin = DEFAULT_SKIN, ...callbacks }: Props) {
   );
 }
 /** La leyenda de teclas ya va en el panel interior; en móvil el overlay táctil cubre el input. */
-export function CaidaControls() {
+export const CaidaControls = memo(function CaidaControls() {
   return null;
-}
+});
