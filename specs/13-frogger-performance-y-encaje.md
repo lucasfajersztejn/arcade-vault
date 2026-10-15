@@ -6,7 +6,7 @@
 > - **`startRound` no invalida el cache ni el fondo.** Ni la paleta ni los sprites cambian entre rondas; invalidar sería trabajo gratuito. `setPalette` sigue siendo el único invalidador.
 > - **Paso 8 — medición DevTools omitida.** El usuario optó por no ejecutar la grabación comparativa 4× CPU. El cambio de perf es correcto por código (`drawImage` sobre canvas prerrenderizados reemplaza decenas de `arc`/`beginPath` por frame + guardas `lastEmitted*` cortan re-renders del HUD), pero no se ha medido el delta exacto.
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por `GamePlayer` y el contrato de motor; SPEC 11 (`specs/11-controles-tactiles-movil.md`) y SPEC 12 (`specs/12-gamepad-estandar-movil.md`) por el gamepad táctil y la media query; `specs/game-jam/frogger/01-frogger-core.md` por la implementación actual del juego.
 **Fecha:** 2026-10-15
 **Objetivo:** Hacer que Frogger ocupe su marco CRT en desktop sin franjas y bajar el coste de render del motor con un fondo offscreen y sprites prerrenderizados, manteniendo la estética y las 3 skins intactas.
