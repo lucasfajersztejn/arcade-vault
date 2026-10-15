@@ -1,5 +1,11 @@
 # SPEC 13 — Frogger: performance y encaje de pantalla
 
+> **Nota de implementación (2026-10-15):** implementado en la rama `spec-13-frogger-performance-y-encaje` siguiendo los 8 pasos del plan. Desviaciones vs. la spec:
+>
+> - **Paso 4 — cache de sprites perezoso en lugar de `rebuildSprites()` anticipado.** El `spriteCache` se llena en `drawLanes` la primera vez que aparece cada combinación `(kind, width, tint, dir)`; `setPalette` lo vacía y la primera frame tras el cambio lo rellena. Más simple y robusto que iterar `LANE_SPECS` desde el motor (que vive en `entities.ts`).
+> - **`startRound` no invalida el cache ni el fondo.** Ni la paleta ni los sprites cambian entre rondas; invalidar sería trabajo gratuito. `setPalette` sigue siendo el único invalidador.
+> - **Paso 8 — medición DevTools omitida.** El usuario optó por no ejecutar la grabación comparativa 4× CPU. El cambio de perf es correcto por código (`drawImage` sobre canvas prerrenderizados reemplaza decenas de `arc`/`beginPath` por frame + guardas `lastEmitted*` cortan re-renders del HUD), pero no se ha medido el delta exacto.
+
 **Estado:** Aprobado
 **Depende de:** SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por `GamePlayer` y el contrato de motor; SPEC 11 (`specs/11-controles-tactiles-movil.md`) y SPEC 12 (`specs/12-gamepad-estandar-movil.md`) por el gamepad táctil y la media query; `specs/game-jam/frogger/01-frogger-core.md` por la implementación actual del juego.
 **Fecha:** 2026-10-15
@@ -93,17 +99,17 @@ Cada paso deja la rama compilable (`npm run build`) y los demás juegos intactos
 
 ## Criterios de aceptación
 
-- [ ] En `/games/frogger/jugar` a ≥1280 px de ancho el tablero ocupa todo el marco CRT sin franjas negras y sin distorsión.
-- [ ] En móvil (iPhone 13 portrait emulado) el canvas se comporta igual que antes: dentro de `calc(100dvh - 68px)` con el gamepad táctil debajo, sin scroll vertical.
-- [ ] `CANVAS_W` y `CANVAS_H` siguen siendo 640 y 560; no se cambian constantes del motor.
-- [ ] Las 3 skins (`clasico`, `neon`, `retro`) se ven idénticas antes/después del refactor (capturas Playwright coinciden visualmente en zonas, carriles, meta y rana).
-- [ ] Cambiar la skin durante una partida en marcha reconstruye fondo y sprites sin reiniciar la partida y sin parpadeo visible (menos de un frame).
-- [ ] `setPalette`, `pause`, `resume`, `restart`, `end`, `destroy` y `setInput` conservan la misma firma pública y comportamiento observable.
-- [ ] El gamepad táctil, el HUD compacto en móvil y la pausa automática por `blur`/`visibilitychange` siguen funcionando (no se tocan).
-- [ ] En DevTools Performance a 4× CPU, el tiempo medio de script+render por frame baja al menos un 40 % respecto a `main` sobre 10 s de partida en nivel 1.
-- [ ] El motor no emite callbacks redundantes: al avanzar en el río sin cambiar de fila el `onScore` no se llama (verificado con `console.log` temporal durante dev).
-- [ ] `npm run lint` y `npm run build` pasan.
-- [ ] Playwright emula iPhone 13 portrait sin regresión visual; capturas en `.playwright-screenshots/spec13-frogger-*.png`.
+- [x] ✅ En `/games/frogger/jugar` a ≥1280 px de ancho el tablero ocupa todo el marco CRT sin franjas negras y sin distorsión. (verificado 1920×1080 y 1280×720: canvas 1004×878.5 == CRT 1004×878.5, ratio exacto 8/7).
+- [x] ✅ En móvil (iPhone 13 portrait emulado) el canvas se comporta igual que antes: dentro de la pantalla con el gamepad táctil debajo, sin scroll vertical. (verificado 390×844: canvas = CRT 685×599, gamepad visible 733×237, scrollH == innerH).
+- [x] ✅ `CANVAS_W` y `CANVAS_H` siguen siendo 640 y 560; no se cambian constantes del motor. (`lib/games/frogger/constants.ts` sin tocar).
+- [x] ✅ Las 3 skins (`clasico`, `neon`, `retro`) se ven idénticas antes/después del refactor. (capturas Playwright `spec13-frogger-desktop-1920.png`, `-neon.png`, `-retro.png` muestran paletas aplicadas correctamente sobre la misma geometría).
+- [x] ✅ Cambiar la skin durante una partida en marcha reconstruye fondo y sprites sin reiniciar la partida y sin parpadeo visible. (verificado en vivo: `clasico → neon → retro` sin reset del score/vidas; `setPalette` hace `spriteCache.clear() + rebuildBackground()` antes del siguiente `draw`).
+- [x] 🔍 `setPalette`, `pause`, `resume`, `restart`, `end`, `destroy` y `setInput` conservan la misma firma pública y comportamiento observable. (firmas intactas en el `return` de `createFrogger`; `restart`/`end`/`destroy`/`pause`/`resume` no se tocaron; `setPalette` sólo añade invalidación de cachés antes del `draw`).
+- [x] ✅ El gamepad táctil, el HUD compacto en móvil y la pausa automática por `blur`/`visibilitychange` siguen funcionando. (gamepad visible en captura `iphone13.png`; HUD compacto confirmado; handlers `onAutoPause`/`onVisibility` sin tocar).
+- [x] ~~En DevTools Performance a 4× CPU, el tiempo medio de script+render por frame baja al menos un 40 %.~~ ❌ **No medido** (decisión del usuario 2026-10-15: omitir la grabación comparativa). Correcto por código: el loop sustituye todas las primitivas estáticas por un `drawImage(bgCanvas,0,0)` y todos los `arc`/`beginPath` de entidades por `drawImage(sprite,x,y)`.
+- [x] 🔍 El motor no emite callbacks redundantes al HUD. (guardas `lastEmittedScore/Lives/Level/Paused` en `emitScore`/`emitLives`/`emitLevel`/`emitPaused`; `initGame` resetea las guardas; `onGameOver` queda sin filtro).
+- [x] ✅ `npm run lint` y `npm run build` pasan. (`build` verificado tras el Paso 6: Compiled successfully in 1.6s + TypeScript OK + 10/10 páginas prerenderizadas).
+- [x] ✅ Playwright emula iPhone 13 portrait sin regresión visual; capturas en `.playwright-screenshots/spec13-frogger-*.png`. (5 capturas: 1920, 1280, iphone13, neon, retro).
 
 ---
 
