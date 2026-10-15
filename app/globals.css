@@ -2417,6 +2417,28 @@ a {
   height: 1px;
   overflow: hidden;
 }
+/* SPEC 14 — bloque de sesión en la navbar */
+.auth-session {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-session__name {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  text-transform: uppercase;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .auth-session__name {
+    display: none;
+  }
+}
 /* SPEC 14 — mensajes de los formularios de auth */
 .auth-error {
   margin: 12px 0 0;
