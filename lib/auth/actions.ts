@@ -78,8 +78,9 @@ export async function requestPasswordReset(input: {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl()}/auth/callback?next=/update-password`,
   });
-  // No distinguimos "existe/no existe" para no filtrar la base de usuarios.
-  if (error) return { ok: false, error: mapAuthError(error.message) };
+  // Nunca distinguimos "existe/no existe" para no filtrar la base de usuarios:
+  // devolvemos ok aunque Supabase falle; el error real queda sólo en servidor.
+  if (error) console.error("[auth] reset", error.message);
   return { ok: true };
 }
 /**
