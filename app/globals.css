@@ -2417,6 +2417,37 @@ a {
   height: 1px;
   overflow: hidden;
 }
+/* SPEC 14 — mensajes de los formularios de auth */
+.auth-error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: #000;
+  border: 1px solid #ff6b6b;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #ff6b6b;
+  letter-spacing: 0.04em;
+}
+.auth-notice {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: #000;
+  border: 1px solid var(--cyan);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--cyan);
+  letter-spacing: 0.04em;
+}
+.field .hint {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
 /* ===== GAMEPAD MK-II (SPEC 12) =====
    Gamepad neón de silueta fija: D-pad de 4 flechas + hub con gema +
    botones circulares A (magenta) y B (cyan). Las posiciones no usadas
