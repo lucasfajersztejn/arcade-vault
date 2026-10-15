@@ -2,10 +2,29 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { safeReturnTo } from "./return-to";
+import { checkRateLimit, getClientIp } from "./rate-limit";
 export type AuthResult = { ok: true } | { ok: false; error: string };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DISPLAY_NAME_RE = /^[A-Za-z0-9_-]{3,20}$/;
 const PASSWORD_MIN = 8;
+const RATE_LIMIT_MESSAGE =
+  "Demasiados intentos. Espera un momento y vuelve a probar.";
+const RATE_SIGNIN = { limit: 10, windowMs: 10 * 60 * 1000 };
+const RATE_SIGNUP = { limit: 5, windowMs: 60 * 60 * 1000 };
+const RATE_RESET = { limit: 5, windowMs: 60 * 60 * 1000 };
+const RATE_OAUTH = { limit: 20, windowMs: 60 * 60 * 1000 };
+async function guardRateLimit(
+  action: string,
+  cfg: { limit: number; windowMs: number },
+): Promise<AuthResult> {
+  const ip = await getClientIp();
+  const rl = checkRateLimit(`${action}:${ip}`, cfg.limit, cfg.windowMs);
+  if (rl.ok) return { ok: true };
+  console.warn(
+    `[auth] rate-limit action=${action} ip=${ip} retryAfterMs=${rl.retryAfterMs}`,
+  );
+  return { ok: false, error: RATE_LIMIT_MESSAGE };
+}
 function siteUrl(): string {
   const base = process.env.NEXT_PUBLIC_SITE_URL;
   if (!base) {
@@ -20,6 +39,8 @@ export async function signUp(input: {
   password: string;
   displayName: string;
 }): Promise<AuthResult> {
+  const guard = await guardRateLimit("signUp", RATE_SIGNUP);
+  if (!guard.ok) return guard;
   const email = input.email.trim();
   const password = input.password;
   const displayName = input.displayName.trim();
@@ -53,6 +74,8 @@ export async function signIn(input: {
   email: string;
   password: string;
 }): Promise<AuthResult> {
+  const guard = await guardRateLimit("signIn", RATE_SIGNIN);
+  if (!guard.ok) return guard;
   const email = input.email.trim();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "Correo no válido." };
   if (!input.password) return { ok: false, error: "Escribe tu contraseña." };
@@ -72,14 +95,17 @@ export async function signOut(): Promise<void> {
 export async function requestPasswordReset(input: {
   email: string;
 }): Promise<AuthResult> {
+  const guard = await guardRateLimit("reset", RATE_RESET);
+  if (!guard.ok) return guard;
   const email = input.email.trim();
   if (!EMAIL_RE.test(email)) return { ok: false, error: "Correo no válido." };
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl()}/auth/callback?next=/update-password`,
   });
-  // No distinguimos "existe/no existe" para no filtrar la base de usuarios.
-  if (error) return { ok: false, error: mapAuthError(error.message) };
+  // Nunca distinguimos "existe/no existe" para no filtrar la base de usuarios:
+  // devolvemos ok aunque Supabase falle; el error real queda sólo en servidor.
+  if (error) console.error("[auth] reset", error.message);
   return { ok: true };
 }
 /**
@@ -90,6 +116,8 @@ export async function signInWithProvider(input: {
   provider: "google" | "github";
   returnTo?: string | null;
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const guard = await guardRateLimit("oauth", RATE_OAUTH);
+  if (!guard.ok) return guard;
   const next = safeReturnTo(input.returnTo, "/");
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -99,7 +127,10 @@ export async function signInWithProvider(input: {
     },
   });
   if (error || !data.url) {
-    return { ok: false, error: error?.message ?? "No se pudo iniciar OAuth." };
+    return {
+      ok: false,
+      error: mapAuthError(error?.message ?? "No se pudo iniciar OAuth."),
+    };
   }
   return { ok: true, url: data.url };
 }
@@ -117,5 +148,6 @@ function mapAuthError(message: string): string {
   if (m.includes("rate limit")) {
     return "Demasiados intentos. Espera un momento y vuelve a probar.";
   }
-  return message;
+  console.error("[auth] unmapped", message);
+  return "No se pudo completar la operación. Vuelve a intentarlo.";
 }
