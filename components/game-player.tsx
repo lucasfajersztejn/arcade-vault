@@ -9,6 +9,7 @@ import {
   type MouseEvent,
 } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { submitScore } from "@/lib/db/scores";
 import { ENGINES, type EngineHandle } from "@/lib/games/registry";
 import { TouchControls } from "@/components/touch-controls";
@@ -19,7 +20,7 @@ import {
   writeSkin,
   type SkinId,
 } from "@/lib/games/skins";
-import { useSession } from "@/lib/session";
+import { useUser } from "@/lib/auth/use-user";
 import { createClient } from "@/lib/supabase/client";
 import type { Game } from "@/lib/types";
 const LIVES = 3;
@@ -47,11 +48,11 @@ function useTouchViewport() {
   return isTouch;
 }
 export function GamePlayer({ game }: { game: Game }) {
-  const { user } = useSession();
+  const { user } = useUser();
+  const pathname = usePathname();
   const [score, setScore] = useState(0);
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
-  const [nameInput, setNameInput] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [lives, setLives] = useState(LIVES);
   const [engineLevel, setEngineLevel] = useState(1);
@@ -75,7 +76,7 @@ export function GamePlayer({ game }: { game: Game }) {
     writeSkin(game.id, next);
     window.dispatchEvent(new Event(SKIN_CHANGE_EVENT));
   };
-  const name = nameInput ?? user?.name ?? "INVITADO";
+  const name = user?.profile.display_name ?? "INVITADO";
   const restart = () => {
     setScore(0);
     setPaused(false);
@@ -102,15 +103,17 @@ export function GamePlayer({ game }: { game: Game }) {
     setOver(true);
   };
   const save = async () => {
-    if (saveState === "saving") return;
+    if (saveState === "saving" || !user) return;
     setSaveState("saving");
     const ok = await submitScore(createClient(), {
       gameId: game.id,
-      playerName: name,
+      playerName: user.profile.display_name,
       score,
+      userId: user.id,
     });
     setSaveState(ok ? "saved" : "error");
   };
+  const loginHref = `/login?returnTo=${encodeURIComponent(pathname)}`;
   // Mantiene el foco dentro del modal mientras está abierto.
   const trapFocus = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Tab" || !modalRef.current) return;
@@ -262,23 +265,18 @@ export function GamePlayer({ game }: { game: Game }) {
               <div className="toast-saved" role="status">
                 ▸ PUNTUACIÓN GUARDADA_
               </div>
-            ) : (
+            ) : user ? (
               <>
                 <div className="input-row">
-                  <input
-                    value={name}
-                    onChange={(e) =>
-                      setNameInput(e.target.value.toUpperCase().slice(0, 10))
-                    }
-                    placeholder="TUS INICIALES"
-                    aria-label="Tus iniciales"
-                    autoFocus
-                  />
+                  <div className="player-chip" aria-label="Tu alias">
+                    {user.profile.display_name}
+                  </div>
                   <button
                     type="button"
                     className="btn yellow"
                     onClick={save}
                     disabled={saveState === "saving"}
+                    autoFocus
                   >
                     {saveState === "saving"
                       ? "GUARDANDO…"
@@ -299,6 +297,13 @@ export function GamePlayer({ game }: { game: Game }) {
                   </div>
                 )}
               </>
+            ) : (
+              <div className="guest-cta">
+                <p>Entra para subir tu puntuación al leaderboard.</p>
+                <Link href={loginHref} className="btn yellow" autoFocus>
+                  ENTRAR PARA GUARDAR
+                </Link>
+              </div>
             )}
             <div className="actions">
               <button type="button" className="btn" onClick={restart}>
