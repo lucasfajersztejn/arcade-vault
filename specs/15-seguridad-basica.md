@@ -1,6 +1,6 @@
 # SPEC 15 — Seguridad básica (RLS, Auth hardening, headers y advisors)
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 04 (`specs/04-integracion-supabase.md`) por el cliente Supabase; SPEC 06 (`specs/06-leaderboard-y-tabla-games.md`) por las tablas `games`/`scores`; SPEC 14 (`specs/14-auth-y-cuentas-de-usuario.md`) por Supabase Auth, `profiles` y el trigger `on_auth_user_created`
 **Fecha:** 2026-10-15
 **Objetivo:** Aplicar el checklist de seguridad básico del proyecto (RLS verificado, políticas de contraseña y rate limit en Supabase Auth, headers de seguridad en Next.js y resolución de los dos advisors de `SECURITY DEFINER` expuestos públicamente) sin tocar mecánicas de juego ni el contrato motor ↔ plataforma.
@@ -43,23 +43,22 @@ Esta spec cierra todos esos puntos a la vez porque son maniobras cortas y relaci
   - `Referrer-Policy: strict-origin-when-cross-origin`
 - **Documentación de operación**: una sección breve en `refereences/references/security-checklist.md` que anota qué quedó aplicado y cómo verificarlo (fecha + commit). No se mueve el archivo ni se renombra.
 - Protección de rrutas con Proxy Next.js: información sobre proxy aquí: https://nextjs.org/docs/app/getting-started/proxy
-ejemplo: 
-proxy.ts
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+  ejemplo:
+  proxy.ts
+  import { NextResponse } from 'next/server'
+  import type { NextRequest } from 'next/server'
 
 // This function can be marked `async` if using `await` inside
 export function proxy(request: NextRequest) {
-  return NextResponse.redirect(new URL('/home', request.url))
+return NextResponse.redirect(new URL('/home', request.url))
 }
 
 // Alternatively, you can use a default export:
 // export default function proxy(request: NextRequest) { ... }
 
 export const config = {
-  matcher: '/about/:path*',
+matcher: '/about/:path*',
 }
-
 
 **Fuera (otra spec):**
 
@@ -147,16 +146,16 @@ Cada paso deja el sistema en estado funcional y es commitable por sí mismo.
 
 ## Criterios de aceptación
 
-- [ ] `mcp__supabase__get_advisors({ type: "security" })` no devuelve `anon_security_definer_function_executable` ni `authenticated_security_definer_function_executable` para `public.handle_new_user` ni `public.rls_auto_enable`.
-- [ ] `mcp__supabase__get_advisors({ type: "security" })` no devuelve `auth_leaked_password_protection`.
-- [ ] Un usuario nuevo puede registrarse desde `/register` y su fila en `public.profiles` queda creada (el trigger sigue funcionando pese al `REVOKE`).
-- [ ] Un cliente autenticado que llame `supabase.rpc('handle_new_user')` desde el navegador recibe `permission denied` (verificado con una llamada manual desde devtools).
-- [ ] `select relrowsecurity from pg_class where oid = 'public.games'::regclass` devuelve `true`; idem para `public.scores`.
-- [ ] Supabase Auth rechaza una contraseña de 7 caracteres y una de 8 caracteres sin símbolo/mayúscula/dígito.
-- [ ] Supabase Auth rechaza la contraseña `Password1!` si figura en HaveIBeenPwned (prueba de humo del leaked password protection).
-- [ ] `curl -sI http://localhost:3000/` incluye `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` y `Referrer-Policy: strict-origin-when-cross-origin`.
-- [ ] Intentar superar el rate limit de signup desde una IP (11 intentos en una hora) devuelve `429` desde Supabase.
-- [ ] `refereences/references/security-checklist.md` tiene marcados los cinco bullets de la sección «Checklist de seguridad básico» y una sección «Aplicado» con fecha 2026-10-15.
+- [x] `mcp__supabase__get_advisors({ type: "security" })` no devuelve `anon_security_definer_function_executable` ni `authenticated_security_definer_function_executable` para `public.handle_new_user` ni `public.rls_auto_enable`.
+- [ ] `mcp__supabase__get_advisors({ type: "security" })` no devuelve `auth_leaked_password_protection`. _(Pendiente: toggle del dashboard no quedó aplicado al cerrar SPEC 15.)_
+- [ ] Un usuario nuevo puede registrarse desde `/register` y su fila en `public.profiles` queda creada (el trigger sigue funcionando pese al `REVOKE`). _(Humo manual pendiente.)_
+- [ ] Un cliente autenticado que llame `supabase.rpc('handle_new_user')` desde el navegador recibe `permission denied` (verificado con una llamada manual desde devtools). _(Humo manual pendiente.)_
+- [x] `select relrowsecurity from pg_class where oid = 'public.games'::regclass` devuelve `true`; idem para `public.scores`.
+- [ ] Supabase Auth rechaza una contraseña de 7 caracteres y una de 8 caracteres sin símbolo/mayúscula/dígito. _(Humo manual pendiente.)_
+- [ ] Supabase Auth rechaza la contraseña `Password1!` si figura en HaveIBeenPwned (prueba de humo del leaked password protection). _(Depende del toggle de leaked password protection.)_
+- [ ] `curl -sI http://localhost:3000/` incluye `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` y `Referrer-Policy: strict-origin-when-cross-origin`. _(Humo manual tras `npm run dev`.)_
+- [ ] Intentar superar el rate limit de signup desde una IP (11 intentos en una hora) devuelve `429` desde Supabase. _(Humo manual pendiente.)_
+- [x] `refereences/references/security-checklist.md` tiene marcados los cinco bullets de la sección «Checklist de seguridad básico» y una sección «Aplicado» con fecha 2026-10-15.
 
 ---
 

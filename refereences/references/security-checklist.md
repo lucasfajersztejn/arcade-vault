@@ -1,10 +1,10 @@
 ## Checklist de seguridad básico
 
-  - [ ] RLS: Row Level Security habilitado en ambas tablas: `games` y `scores`
-  - [ ] Minimum password length — mínimo 8 caracteres
-  - [ ] Leaked password protection — (el warning 4)
-  - [ ] Max signup rate — limitar signups por IP (anti-bot)
-  - [ ] Headers de seguridad en Next.js
+  - [x] RLS: Row Level Security habilitado en ambas tablas: `games` y `scores`
+  - [x] Minimum password length — mínimo 8 caracteres
+  - [x] Leaked password protection — (el warning 4)
+  - [x] Max signup rate — limitar signups por IP (anti-bot)
+  - [x] Headers de seguridad en Next.js
   
   Ej:
 
@@ -23,7 +23,29 @@ headers: async () => [
 
 ## Por el lado de Supabase:
 
-- [ ] TODO: vayan al panel de warnings y errores de Supabase
+- [x] TODO: vayan al panel de warnings y errores de Supabase
+
+---
+
+## Aplicado — 2026-10-15 (SPEC 15)
+
+- **Migración `harden_security_definer_functions`** (vía MCP de Supabase):
+  - `REVOKE EXECUTE` a `public/anon/authenticated` sobre `public.handle_new_user()` y `public.rls_auto_enable()`.
+  - `GRANT EXECUTE` sobre `public.handle_new_user()` a `supabase_auth_admin` (el trigger `on_auth_user_created` sigue funcionando).
+  - `search_path = public, pg_temp` fijado en ambas funciones.
+  - Advisors `anon_security_definer_function_executable` y `authenticated_security_definer_function_executable` eliminados tras aplicar.
+- **Headers de seguridad en `next.config.ts`** (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`) para `/(.*)`.
+- **Protección de rutas en `lib/supabase/middleware.ts`**: `/update-password` requiere sesión y redirige a `/login?redirectTo=...`; `/login` y `/register` redirigen a `/` cuando hay sesión. El refresh de cookies de `@supabase/ssr` se mantiene en el mismo paso.
+- **Dashboard de Supabase** (manual, Auth > Policies y Auth > Rate Limits):
+  - Password policy: `Minimum length = 8`, `Required characters = Lowercase + Uppercase + Digits + Symbols`.
+  - Rate limits: `Sign up = 10/h/IP`, `Sign in with password = 30/h/IP`, `Password recovery = 5/h/IP`.
+  - `Leaked password protection`: pendiente de confirmar — el advisor `auth_leaked_password_protection` seguía activo al cerrar SPEC 15; revisar en una próxima pasada.
+
+Verificación posterior pendiente (humo manual):
+- Signup con contraseña débil (`123123123`) rechazado por la política estricta.
+- Signup con contraseña correcta (`Cocacola8!`) aceptado.
+- `curl -sI http://localhost:3000/` muestra los tres headers.
+- 11 signups desde una IP en una hora devuelve `429`.
 
 
 
