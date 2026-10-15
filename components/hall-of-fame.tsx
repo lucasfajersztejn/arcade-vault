@@ -4,7 +4,7 @@ import Link from "next/link";
 import { EmptyRanking } from "@/components/empty-ranking";
 import { LoadError } from "@/components/load-error";
 import { getLeaderboard, getPlayerBest } from "@/lib/db/scores";
-import { useSession } from "@/lib/session";
+import { useUser } from "@/lib/auth/use-user";
 import { createClient } from "@/lib/supabase/client";
 import type { Game, PlayerBest, ScoreRow } from "@/lib/types";
 const TOP_CLASS = ["top1", "top2", "top3"];
@@ -13,12 +13,12 @@ const fmt = (n: number) => n.toLocaleString("es-ES");
 const pad = (n: number) => String(n).padStart(2, "0");
 type Loaded = { rows: ScoreRow[]; you: PlayerBest | null } | "error";
 export function HallOfFame({ games }: { games: Game[] }) {
-  const { user } = useSession();
+  const { user } = useUser();
   const [tab, setTab] = useState(games[0].id);
   const [attempt, setAttempt] = useState(0);
   const [results, setResults] = useState<Record<string, Loaded>>({});
   const game = games.find((g) => g.id === tab) ?? games[0];
-  const userName = user?.name ?? null;
+  const userName = user?.profile.display_name ?? null;
   // Cada combinación juego + jugador + intento tiene su resultado; sin resultado = cargando.
   const key = `${tab}|${userName ?? ""}|${attempt}`;
   const result = results[key];

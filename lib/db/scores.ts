@@ -52,17 +52,25 @@ export async function getPlayerBest(
     date: data.achieved_at ? formatDate(data.achieved_at) : "",
   };
 }
-/** Inserta una puntuación; devuelve false si no se pudo guardar. */
+/** Inserta una puntuación autenticada; devuelve false si no se pudo guardar. */
 export async function submitScore(
   supabase: Db,
-  entry: { gameId: string; playerName: string; score: number },
+  entry: {
+    gameId: string;
+    playerName: string;
+    score: number;
+    userId: string;
+  },
 ): Promise<boolean> {
   const player_name = entry.playerName.trim().slice(0, NAME_MAX) || "INVITADO";
   const score = Math.min(Math.max(Math.floor(entry.score), 0), SCORE_MAX);
   try {
-    const { error } = await supabase
-      .from("scores")
-      .insert({ game_id: entry.gameId, player_name, score });
+    const { error } = await supabase.from("scores").insert({
+      game_id: entry.gameId,
+      player_name,
+      score,
+      user_id: entry.userId,
+    });
     return !error;
   } catch {
     return false;
