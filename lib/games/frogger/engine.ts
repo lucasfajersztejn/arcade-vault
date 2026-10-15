@@ -320,83 +320,120 @@ export function createFrogger(
       }
     }
   }
-  function drawCar(entity: Entity, row: number, dir: 1 | -1): void {
-    const x = px(entity.col);
-    const y = py(row) + 7;
-    const w = entity.width * CELL - 6;
+  /**
+   * Primitivas de dibujo relativas a `(offsetX, offsetY)`. El motor las llama en vivo
+   * (paso 2) y, a partir del paso 4, las usará para prerrenderizar sprites una vez por
+   * `(kind, width, tint, dir)` y pintar en el hot path con `drawImage`.
+   */
+  function paintCar(
+    target: CanvasRenderingContext2D,
+    offsetX: number,
+    offsetY: number,
+    width: number,
+    tint: number,
+    dir: 1 | -1,
+  ): void {
+    const y = offsetY + 7;
+    const w = width * CELL - 6;
     const h = CELL - 14;
-    ctx.fillStyle = palette.carBodies[(entity.tint ?? 0) % 3];
-    ctx.fillRect(x + 3, y, w, h);
+    target.fillStyle = palette.carBodies[tint % 3];
+    target.fillRect(offsetX + 3, y, w, h);
     // Parabrisas en el morro, para que se lea el sentido de la marcha.
-    ctx.fillStyle = palette.carGlass;
+    target.fillStyle = palette.carGlass;
     const glassW = Math.min(10, w / 3);
-    ctx.fillRect(
-      dir === 1 ? x + 3 + w - glassW - 2 : x + 5,
+    target.fillRect(
+      dir === 1 ? offsetX + 3 + w - glassW - 2 : offsetX + 5,
       y + 3,
       glassW,
       h - 6,
     );
-    ctx.fillStyle = palette.wheel;
-    ctx.fillRect(x + 6, y - 3, 7, 3);
-    ctx.fillRect(x + w - 7, y - 3, 7, 3);
-    ctx.fillRect(x + 6, y + h, 7, 3);
-    ctx.fillRect(x + w - 7, y + h, 7, 3);
+    target.fillStyle = palette.wheel;
+    target.fillRect(offsetX + 6, y - 3, 7, 3);
+    target.fillRect(offsetX + w - 7, y - 3, 7, 3);
+    target.fillRect(offsetX + 6, y + h, 7, 3);
+    target.fillRect(offsetX + w - 7, y + h, 7, 3);
   }
-  function drawTruck(entity: Entity, row: number, dir: 1 | -1): void {
-    const x = px(entity.col);
-    const y = py(row) + 5;
-    const w = entity.width * CELL - 6;
+  function paintTruck(
+    target: CanvasRenderingContext2D,
+    offsetX: number,
+    offsetY: number,
+    width: number,
+    dir: 1 | -1,
+  ): void {
+    const y = offsetY + 5;
+    const w = width * CELL - 6;
     const h = CELL - 10;
     const cabW = CELL - 12;
-    ctx.fillStyle = palette.truckBody;
-    ctx.fillRect(x + 3, y, w, h);
-    ctx.fillStyle = palette.truckCab;
-    ctx.fillRect(dir === 1 ? x + 3 + w - cabW : x + 3, y, cabW, h);
-    ctx.fillStyle = palette.wheel;
-    ctx.fillRect(x + 8, y + h, 8, 3);
-    ctx.fillRect(x + w - 10, y + h, 8, 3);
+    target.fillStyle = palette.truckBody;
+    target.fillRect(offsetX + 3, y, w, h);
+    target.fillStyle = palette.truckCab;
+    target.fillRect(
+      dir === 1 ? offsetX + 3 + w - cabW : offsetX + 3,
+      y,
+      cabW,
+      h,
+    );
+    target.fillStyle = palette.wheel;
+    target.fillRect(offsetX + 8, y + h, 8, 3);
+    target.fillRect(offsetX + w - 10, y + h, 8, 3);
   }
-  function drawLog(entity: Entity, row: number): void {
-    const x = px(entity.col);
-    const y = py(row) + 8;
-    const w = entity.width * CELL;
+  function paintLog(
+    target: CanvasRenderingContext2D,
+    offsetX: number,
+    offsetY: number,
+    width: number,
+  ): void {
+    const y = offsetY + 8;
+    const w = width * CELL;
     const h = CELL - 16;
-    ctx.fillStyle = palette.log;
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = palette.logGrain;
-    ctx.lineWidth = 2;
-    for (let i = 1; i < entity.width * 2; i += 1) {
-      const lx = x + (i * w) / (entity.width * 2);
-      ctx.beginPath();
-      ctx.moveTo(lx, y + 3);
-      ctx.lineTo(lx, y + h - 3);
-      ctx.stroke();
+    target.fillStyle = palette.log;
+    target.fillRect(offsetX, y, w, h);
+    target.strokeStyle = palette.logGrain;
+    target.lineWidth = 2;
+    for (let i = 1; i < width * 2; i += 1) {
+      const lx = offsetX + (i * w) / (width * 2);
+      target.beginPath();
+      target.moveTo(lx, y + 3);
+      target.lineTo(lx, y + h - 3);
+      target.stroke();
     }
   }
-  function drawTurtles(entity: Entity, row: number): void {
-    for (let i = 0; i < entity.width; i += 1) {
-      const cx = px(entity.col + i) + CELL / 2;
-      const cy = py(row) + CELL / 2;
-      ctx.fillStyle = palette.turtleShell;
-      ctx.beginPath();
-      ctx.arc(cx, cy, CELL / 2 - 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = palette.turtleShellEdge;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, CELL / 2 - 9, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = palette.turtleHead;
-      ctx.fillRect(cx - 3, cy - CELL / 2 + 3, 6, 5);
+  function paintTurtles(
+    target: CanvasRenderingContext2D,
+    offsetX: number,
+    offsetY: number,
+    width: number,
+  ): void {
+    for (let i = 0; i < width; i += 1) {
+      const cx = offsetX + i * CELL + CELL / 2;
+      const cy = offsetY + CELL / 2;
+      target.fillStyle = palette.turtleShell;
+      target.beginPath();
+      target.arc(cx, cy, CELL / 2 - 5, 0, Math.PI * 2);
+      target.fill();
+      target.strokeStyle = palette.turtleShellEdge;
+      target.lineWidth = 2;
+      target.beginPath();
+      target.arc(cx, cy, CELL / 2 - 9, 0, Math.PI * 2);
+      target.stroke();
+      target.fillStyle = palette.turtleHead;
+      target.fillRect(cx - 3, cy - CELL / 2 + 3, 6, 5);
     }
   }
   function drawLanes(): void {
     for (const lane of lanes) {
       for (const entity of lane.entities) {
-        if (entity.kind === "car") drawCar(entity, lane.row, lane.dir);
-        else if (entity.kind === "truck") drawTruck(entity, lane.row, lane.dir);
-        else if (entity.kind === "log") drawLog(entity, lane.row);
-        else drawTurtles(entity, lane.row);
+        const x = px(entity.col);
+        const y = py(lane.row);
+        if (entity.kind === "car") {
+          paintCar(ctx, x, y, entity.width, entity.tint ?? 0, lane.dir);
+        } else if (entity.kind === "truck") {
+          paintTruck(ctx, x, y, entity.width, lane.dir);
+        } else if (entity.kind === "log") {
+          paintLog(ctx, x, y, entity.width);
+        } else {
+          paintTurtles(ctx, x, y, entity.width);
+        }
       }
     }
   }
