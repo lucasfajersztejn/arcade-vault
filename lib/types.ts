@@ -28,10 +28,6 @@ export interface ScoreRow {
   /** Formato DD/MM/2026 */
   date: string;
 }
-/** Persistido en localStorage["av_user"]. Legado: a eliminar al cerrar SPEC 14. */
-export interface SessionUser {
-  name: string;
-}
 /** Fila de `public.profiles` (ver SPEC 14). */
 export interface Profile {
   user_id: string;
