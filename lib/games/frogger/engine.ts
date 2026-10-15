@@ -92,6 +92,12 @@ export function createFrogger(
   const ctx: CanvasRenderingContext2D = ctx2d;
   canvas.width = CANVAS_W;
   canvas.height = CANVAS_H;
+  // Canvas offscreen con el fondo estático (zonas + líneas de carretera + bocas vacías).
+  // Se repinta sólo cuando cambia la paleta; el loop por frame lo copia con drawImage.
+  const bgCanvas = document.createElement("canvas");
+  bgCanvas.width = CANVAS_W;
+  bgCanvas.height = CANVAS_H;
+  const bgCtx = bgCanvas.getContext("2d") as CanvasRenderingContext2D;
   let palette: FroggerPalette = options.palette ?? SKINS.clasico;
   let lanes: Lane[] = [];
   let frog: Frog = createFrog();
@@ -270,54 +276,70 @@ export function createFrogger(
   // ------------------------------------------------------------------- draw
   const px = (col: number) => col * CELL;
   const py = (row: number) => row * CELL;
-  function drawZones(): void {
-    ctx.fillStyle = palette.river;
-    ctx.fillRect(0, py(ROW_GOALS), CANVAS_W, py(ROW_SAFE_MID));
-    ctx.fillStyle = palette.goalRow;
-    ctx.fillRect(0, py(ROW_GOALS), CANVAS_W, CELL);
-    ctx.fillStyle = palette.safe;
-    ctx.fillRect(0, py(ROW_SAFE_MID), CANVAS_W, CELL);
-    ctx.fillRect(0, py(ROW_START), CANVAS_W, CELL);
-    ctx.fillStyle = palette.road;
-    ctx.fillRect(
+  /**
+   * Repinta `bgCanvas` con el fondo estático de la partida (zonas, líneas de carretera y
+   * los 5 slots de meta vacíos). Se llama al crear el motor y cuando cambia la paleta;
+   * el loop por frame copia este canvas con un solo `drawImage`.
+   */
+  function rebuildBackground(): void {
+    bgCtx.fillStyle = palette.river;
+    bgCtx.fillRect(0, py(ROW_GOALS), CANVAS_W, py(ROW_SAFE_MID));
+    bgCtx.fillStyle = palette.goalRow;
+    bgCtx.fillRect(0, py(ROW_GOALS), CANVAS_W, CELL);
+    bgCtx.fillStyle = palette.safe;
+    bgCtx.fillRect(0, py(ROW_SAFE_MID), CANVAS_W, CELL);
+    bgCtx.fillRect(0, py(ROW_START), CANVAS_W, CELL);
+    bgCtx.fillStyle = palette.road;
+    bgCtx.fillRect(
       0,
       py(ROW_ROAD_TOP),
       CANVAS_W,
       (ROW_ROAD_BOT - ROW_ROAD_TOP + 1) * CELL,
     );
     // Líneas discontinuas entre carriles de carretera.
-    ctx.strokeStyle = palette.roadLine;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([12, 14]);
+    bgCtx.strokeStyle = palette.roadLine;
+    bgCtx.lineWidth = 2;
+    bgCtx.setLineDash([12, 14]);
     for (let row = ROW_ROAD_TOP + 1; row <= ROW_ROAD_BOT; row += 1) {
-      ctx.beginPath();
-      ctx.moveTo(0, py(row));
-      ctx.lineTo(CANVAS_W, py(row));
-      ctx.stroke();
+      bgCtx.beginPath();
+      bgCtx.moveTo(0, py(row));
+      bgCtx.lineTo(CANVAS_W, py(row));
+      bgCtx.stroke();
     }
-    ctx.setLineDash([]);
-  }
-  function drawGoals(): void {
+    bgCtx.setLineDash([]);
+    // Slots de meta vacíos: el relleno + silueta de la rana se dibujan encima en vivo.
     for (let i = 0; i < GOAL_COUNT; i += 1) {
       const x = px(goalColFor(i));
       const y = py(ROW_GOALS) + TIME_BAR_H + 2;
       const w = GOAL_WIDTH * CELL;
       const h = CELL - TIME_BAR_H - 4;
-      ctx.fillStyle = goals[i] ? palette.goalFilled : palette.goalEmpty;
+      bgCtx.fillStyle = palette.goalEmpty;
+      bgCtx.fillRect(x, y, w, h);
+      bgCtx.strokeStyle = palette.goalBorder;
+      bgCtx.lineWidth = 2;
+      bgCtx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+    }
+  }
+  /** Overlay sobre `bgCanvas`: sólo las bocas con la rana ya alojada. */
+  function drawGoalsFilled(): void {
+    for (let i = 0; i < GOAL_COUNT; i += 1) {
+      if (!goals[i]) continue;
+      const x = px(goalColFor(i));
+      const y = py(ROW_GOALS) + TIME_BAR_H + 2;
+      const w = GOAL_WIDTH * CELL;
+      const h = CELL - TIME_BAR_H - 4;
+      ctx.fillStyle = palette.goalFilled;
       ctx.fillRect(x, y, w, h);
       ctx.strokeStyle = palette.goalBorder;
       ctx.lineWidth = 2;
       ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
-      if (goals[i]) {
-        // Silueta de la rana ya alojada.
-        ctx.fillStyle = palette.frogBody;
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h / 2, 10, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = palette.frogEye;
-        ctx.fillRect(x + w / 2 - 6, y + h / 2 - 6, 3, 3);
-        ctx.fillRect(x + w / 2 + 3, y + h / 2 - 6, 3, 3);
-      }
+      ctx.fillStyle = palette.frogBody;
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2, y + h / 2, 10, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.frogEye;
+      ctx.fillRect(x + w / 2 - 6, y + h / 2 - 6, 3, 3);
+      ctx.fillRect(x + w / 2 + 3, y + h / 2 - 6, 3, 3);
     }
   }
   /**
@@ -498,9 +520,9 @@ export function createFrogger(
     ctx.fillRect(0, 0, CANVAS_W * ratio, TIME_BAR_H);
   }
   function draw(): void {
-    drawZones();
+    ctx.drawImage(bgCanvas, 0, 0);
     drawLanes();
-    drawGoals();
+    drawGoalsFilled();
     drawFrog();
     drawTimeBar();
   }
@@ -594,6 +616,7 @@ export function createFrogger(
   }
   function setPalette(next: FroggerPalette): void {
     palette = next;
+    rebuildBackground();
     draw();
   }
   function destroy(): void {
@@ -607,6 +630,7 @@ export function createFrogger(
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("blur", onAutoPause);
   document.addEventListener("visibilitychange", onVisibility);
+  rebuildBackground();
   initGame();
   draw();
   startLoop();
