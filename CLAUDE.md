@@ -33,6 +33,20 @@ A spec written by `game-jam` (or any generic generator) may describe an architec
 - **Game engines**: each game lives in `lib/games/<id>/` (`constants`, `types`, `entities`, `engine`, optional `utils`/`sprites`/`levels`) plus `components/<id>-canvas.tsx` exporting `<Id>Canvas` and `<Id>Controls`. `lib/games/registry.ts` maps `game.id` → `{ Canvas, Controls, hasLives, ariaLabel, skins?, touchActions? }` and defines `EngineHandle` (`pause/resume/restart/end/setInput`) and `EngineCanvasProps` (`onScore/onLives/onLevel/onGameOver/onPause/skin`). The engine factory itself exposes seven keys (those five plus `destroy` and `setPalette`) and takes `(canvas, callbacks, options?)`; write all seven from the start, since `skin-designer` and `mobile-porter` assume them. Leave `skins`/`touchActions` out of the registry entry until those agents run. Full contract, including the `onPause` feedback loop, the `ctx` narrowing trap and the canvas CSS rules: `.claude/skills/nuevo-juego/reference/contrato-motor.md`. `components/game-player.tsx` renders the platform HUD, pause/game-over modal and score submission for any registered engine; a catalog game without an engine shows «JUEGO NO DISPONIBLE». Game assets go in `public/games/<id>/`. Original sources to port live in `refereences/started-games/` (and `refereences/source-assets/`); `refereences/templates/` holds the original UI mockups.
 - **Shared types/data**: `lib/types.ts` (`Game`, `ScoreRow`, `PlayerBest`, `SessionUser`), `lib/data.ts` (library category filters), `lib/format.ts`.
 
+## Performance reference
+
+Para cualquier pasada de optimización sobre un motor canvas (nuevo o existente), **SPEC 13** (`specs/13-frogger-performance-y-encaje.md`) es la plantilla canónica. Introduce 5 patrones reutilizables en los motores de Arcade Vault, ya aplicados a Frogger:
+
+1. Fondo estático cacheado en un `HTMLCanvasElement` offscreen (`bgCanvas` + `rebuildBackground()`), copiado con un `drawImage` por frame; invalidar solo en `setPalette`.
+2. Sprite cache perezoso por `(kind, width, tint, dir)` en `Map<string, HTMLCanvasElement>` (`spriteCache` + `getSprite(key, width, paint)`); invalidar con `spriteCache.clear()` en `setPalette`.
+3. Guardas de emisión al HUD en el closure del motor (`lastEmittedScore/Lives/Level/Paused` + `emitScore/emitLives/emitLevel/emitPaused`); reset en `initGame()`; **nunca filtrar `onGameOver`**.
+4. `memo(<Id>Controls)` para subárboles sin props que cuelgan de `GamePlayer`.
+5. Encaje del CRT al aspect del canvas con `.crt-screen:has(> .<id>-canvas) { aspect-ratio: X / Y }` (patrón hermano de Snake 1:1).
+
+Antirregla: **no tocar `components/game-player.tsx` por iniciativa** (compartido con 5 juegos). Si hay que bajar re-renders del HUD, se hace dentro del motor del juego concreto. No reescribir motores a WebGL/Pixi (rompería `setPalette`/`Palette`). No introducir `OffscreenCanvas` (compat Safari).
+
+Código real de referencia: `lib/games/frogger/engine.ts` (los 3 primeros patrones), `components/frogger-canvas.tsx` (patrón 4), `app/globals.css` cerca de `has(> .snake-canvas)` (patrón 5). Capturas baseline: `.playwright-screenshots/spec13-frogger-*.png`.
+
 ## Stack and gotchas
 
 - Next.js 16.4, React 19.3, App Router (`app/`), TypeScript, Tailwind CSS v4 (`@import "tailwindcss"` in `app/globals.css`, theme tokens via `@theme inline`; compiled through `@tailwindcss/turbopack`). Most styling is custom CSS classes in `app/globals.css` (neon/CRT arcade theme). The play screen has a mobile "app layout" block at `@media (max-width: 768px)` where `.av-player` is `calc(100dvh - 68px)` (the sticky navbar) and `.crt-screen` becomes `flex: 1 1 auto` with `aspect-ratio: auto`: inside it a canvas keeps its shape with `object-fit: contain`, never by forcing an `aspect-ratio` on the screen. Touching those rules affects all five games at once.
