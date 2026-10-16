@@ -26,13 +26,13 @@ async function guardRateLimit(
   return { ok: false, error: RATE_LIMIT_MESSAGE };
 }
 function siteUrl(): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!base) {
-    throw new Error(
-      "Falta la variable de entorno NEXT_PUBLIC_SITE_URL (ver .env.template).",
-    );
-  }
-  return base.replace(/\/$/, "");
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+  const vercel = process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel.replace(/\/$/, "")}`;
+  throw new Error(
+    "Falta la variable de entorno NEXT_PUBLIC_SITE_URL (ver .env.template).",
+  );
 }
 export async function signUp(input: {
   email: string;
