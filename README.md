@@ -1,23 +1,48 @@
-## Arcade Vault
+# Arcade Vault
 
-Es una plataforma para jugar online y competir por la mayor cantidad de puntos.
+A retro arcade platform where players sign in, play classic
+games in the browser and compete on per-game high score boards.
 
-## Usa Spec Driven Design
+**Live:** https://arcade-vault-woad.vercel.app
 
-Basado en /spec y /spec-impl
+## About this project
 
-Siguiendo las buenas practicas recomendadas aquí:
-https://github.com/Klerith/fernando-skills
+Arcade Vault is the final project of the DevTalles course
+"Claude Code: Guía completa para desarrolladores de software".
 
-## Skills usadas
+It was built with Claude Code following a spec-driven workflow:
+my role was writing the specs, reviewing each iteration and making
+the product and design decisions. I did not hand-write the game
+implementations. I am including it here because it is the most
+complete thing I have shipped in 2026 and because knowing how to
+direct these tools is part of the job now — not as a sample of my
+own code. For that, see [CinePop](https://github.com/lucasfajersztejn/cinepop).
+
+## Stack
+
+- Next.js
+- Tailwind CSS
+- Supabase (database and authentication)
+
+## Features
+
+- Sign in with Google or GitHub via OAuth
+- Five playable browser games: Arkanoid, Tetris, Asteroids,
+  Snake and Frogger
+- Search by title and filtering by category (arcade, puzzle, shooter)
+- Per-user high scores
+- Transactional email
+- Retro visual design across the whole app
+
+## Running locally
 
 ```bash
-npx skills@latest add Klerith/fernando-skills
+npm install
+npm run dev     # http://localhost:3000
+npm run build   # production build
+npm run start   # serve the production build
+npm run lint    # ESLint 9
 ```
 
-## Commands
-
-- `npm run dev` — dev server (http://localhost:3000)
-- `npm run build` / `npm run start` — production build / serve
-- `npm run lint` — ESLint 9 (flat config in `eslint.config.mjs`)
-- No test runner configured.
+Requires a `.env.local` file with your Supabase project URL and
+anon key.
